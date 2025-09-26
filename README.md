@@ -4,6 +4,8 @@ A robust Python CLI tool demonstrating comprehensive CI/CD best practices, secur
 
 ## Purpose
 
+<!-- Test commit to verify CI triggers -->
+
 This repository serves as a template/example for teams implementing secure development workflows with:
 - **Multi-layer secret detection** using GitGuardian
 - **Automated test coverage enforcement** (80% minimum threshold)
