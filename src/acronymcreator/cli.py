@@ -74,7 +74,9 @@ def main(
         variations = creator.generate_multiple_options(phrase)
 
         if not any(variations.values()):
-            click.echo("No acronyms could be generated from the given phrase.", err=True)
+            click.echo(
+                "No acronyms could be generated from the given phrase.", err=True
+            )
             raise click.Abort()
 
         if format.lower() == "text":
@@ -85,7 +87,8 @@ def main(
 
             for category, results in variations.items():
                 if results:
-                    click.echo(f"{category.replace('_', ' ').title()}: {', '.join(results)}")
+                    category_title = category.replace('_', ' ').title()
+                    click.echo(f"{category_title}: {', '.join(results)}")
         else:
             # JSON/YAML output for all variations
             output_data = {
