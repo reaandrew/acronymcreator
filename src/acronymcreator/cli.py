@@ -41,7 +41,13 @@ from .core import AcronymCreator, AcronymOptions
 )
 @click.version_option(version="0.1.0", prog_name="acronymcreator")
 def main(
-    phrase, include_articles, min_length, max_words, lowercase, format, all_variations
+    phrase,
+    include_articles,
+    min_length,
+    max_words,
+    lowercase,
+    format,
+    all_variations,
 ):
     """Generate acronyms from phrases.
 

@@ -121,13 +121,18 @@ class TestCLI:
 
     def test_cli_json_with_options(self):
         """Test CLI JSON output with various options."""
-        result = self.runner.invoke(main, [
-            "The Quick Brown Fox",
-            "--format", "json",
-            "--include-articles",
-            "--min-length", "3",
-            "--lowercase"
-        ])
+        result = self.runner.invoke(
+            main,
+            [
+                "The Quick Brown Fox",
+                "--format",
+                "json",
+                "--include-articles",
+                "--min-length",
+                "3",
+                "--lowercase",
+            ],
+        )
         assert result.exit_code == 0
 
         data = json.loads(result.output)
@@ -137,11 +142,10 @@ class TestCLI:
 
     def test_cli_yaml_with_max_words(self):
         """Test CLI YAML output with max words option."""
-        result = self.runner.invoke(main, [
-            "The Quick Brown Fox Jumps",
-            "--format", "yaml",
-            "--max-words", "3"
-        ])
+        result = self.runner.invoke(
+            main,
+            ["The Quick Brown Fox Jumps", "--format", "yaml", "--max-words", "3"],
+        )
         assert result.exit_code == 0
 
         data = yaml.safe_load(result.output)
