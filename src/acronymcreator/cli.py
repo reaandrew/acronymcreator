@@ -94,7 +94,7 @@ def main(
 
             for category, results in variations.items():
                 if results:
-                    category_title = category.replace('_', ' ').title()
+                    category_title = category.replace("_", " ").title()
                     click.echo(f"{category_title}: {', '.join(results)}")
         else:
             # JSON/YAML output for all variations
@@ -106,7 +106,7 @@ def main(
                     "include_articles": include_articles,
                     "min_length": min_length,
                     "max_words": max_words,
-                    "lowercase": lowercase
+                    "lowercase": lowercase,
                 }
             }
 
@@ -134,7 +134,7 @@ def main(
                     "include_articles": include_articles,
                     "min_length": min_length,
                     "max_words": max_words,
-                    "lowercase": lowercase
+                    "lowercase": lowercase,
                 }
             }
 
