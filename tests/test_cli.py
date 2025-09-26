@@ -83,7 +83,9 @@ class TestCLI:
 
     def test_cli_json_format_all_variations(self):
         """Test CLI with JSON format for all variations."""
-        result = self.runner.invoke(main, ["The Quick Brown Fox", "--format", "json", "--all-variations"])
+        result = self.runner.invoke(
+            main, ["The Quick Brown Fox", "--format", "json", "--all-variations"]
+        )
         assert result.exit_code == 0
 
         data = json.loads(result.output)
@@ -99,7 +101,9 @@ class TestCLI:
 
     def test_cli_yaml_format_all_variations(self):
         """Test CLI with YAML format for all variations."""
-        result = self.runner.invoke(main, ["The Quick Brown Fox", "--format", "yaml", "--all-variations"])
+        result = self.runner.invoke(
+            main, ["The Quick Brown Fox", "--format", "yaml", "--all-variations"]
+        )
         assert result.exit_code == 0
 
         data = yaml.safe_load(result.output)
@@ -172,7 +176,9 @@ class TestCLI:
 
     def test_cli_json_variations_structure(self):
         """Test JSON variations output structure matches requirements."""
-        result = self.runner.invoke(main, ["Test Phrase", "--format", "json", "--all-variations"])
+        result = self.runner.invoke(
+            main, ["Test Phrase", "--format", "json", "--all-variations"]
+        )
         assert result.exit_code == 0
 
         data = json.loads(result.output)

@@ -40,7 +40,9 @@ from .core import AcronymCreator, AcronymOptions
     help="Export all variations from generate_multiple_options()"
 )
 @click.version_option(version="0.1.0", prog_name="acronymcreator")
-def main(phrase, include_articles, min_length, max_words, lowercase, format, all_variations):
+def main(
+    phrase, include_articles, min_length, max_words, lowercase, format, all_variations
+):
     """Generate acronyms from phrases.
 
     PHRASE: The phrase to create an acronym from
