@@ -1,6 +1,8 @@
 """
 Command line interface for AcronymCreator.
 Provides JSON/YAML export functionality for acronym results.
+
+This module supports multiple output formats including text, JSON, and YAML.
 """
 
 import json
