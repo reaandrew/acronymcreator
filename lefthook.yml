@@ -36,17 +36,14 @@ pre-commit:
       run: python -c "import yaml, sys; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" {staged_files}
 
     gitguardian:
-      run: |
-        if [ -n "$GITGUARDIAN_API_KEY" ]; then
-          ggshield secret scan pre-commit
-        else
-          echo "Skipping GitGuardian (no API key set)"
-        fi
+      skip:
+        - run: '[ -z "$GITGUARDIAN_API_KEY" ]'
+      run: ggshield secret scan pre-commit
 
     pytest:
-      files: git diff --cached --name-only | grep -E '^(src/|tests/).*\.py$'
       run: |
-        if [ -n "{files}" ]; then
+        files=$(git diff --cached --name-only | grep -E '^(src/|tests/).*\.py$' || true)
+        if [ -n "$files" ]; then
           python -B -m pytest -c pytest-precommit.ini -p no:cacheprovider
         fi
 
