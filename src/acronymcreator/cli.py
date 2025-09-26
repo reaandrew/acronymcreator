@@ -1,5 +1,6 @@
 """
 Command line interface for AcronymCreator.
+Provides JSON/YAML export functionality for acronym results.
 """
 
 import json
