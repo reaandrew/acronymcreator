@@ -72,8 +72,7 @@ def main(phrase, include_articles, min_length, max_words, lowercase, format):
                 "lowercase": lowercase,
             },
         }
-        # This will break tests - intentionally calling undefined variable
-        click.echo(json.dumps(undefined_variable, indent=2))
+        click.echo(json.dumps(output, indent=2))
     else:
         click.echo(result)
 
