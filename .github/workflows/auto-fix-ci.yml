@@ -45,6 +45,7 @@ jobs:
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        additional_permissions: "Bash,WebFetch,Edit,Write,Read,Glob,Grep"
         prompt: |
           The CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
