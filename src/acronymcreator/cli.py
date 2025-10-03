@@ -2,6 +2,7 @@
 Command line interface for AcronymCreator.
 """
 
+import json
 import click
 from .core import AcronymCreator, AcronymOptions
 
@@ -24,8 +25,14 @@ from .core import AcronymCreator, AcronymOptions
 @click.option(
     "--lowercase", is_flag=True, default=False, help="Output acronym in lowercase"
 )
+@click.option(
+    "--format",
+    type=click.Choice(["text", "json"], case_sensitive=False),
+    default="text",
+    help="Output format (default: text)",
+)
 @click.version_option(version="0.1.0", prog_name="acronymcreator")
-def main(phrase, include_articles, min_length, max_words, lowercase):
+def main(phrase, include_articles, min_length, max_words, lowercase, format):
     """Generate acronyms from phrases.
 
     PHRASE: The phrase to create an acronym from
@@ -48,11 +55,24 @@ def main(phrase, include_articles, min_length, max_words, lowercase):
 
     result = creator.create_basic_acronym(phrase, options)
 
-    if result:
-        click.echo(result)
-    else:
+    if not result:
         click.echo("No acronym could be generated from the given phrase.", err=True)
         raise click.Abort()
+
+    if format == "json":
+        output = {
+            "phrase": phrase,
+            "acronym": result,
+            "options": {
+                "include_articles": include_articles,
+                "min_word_length": min_length,
+                "max_words": max_words,
+                "lowercase": lowercase,
+            },
+        }
+        click.echo(json.dumps(output, indent=2))
+    else:
+        click.echo(result)
 
 
 if __name__ == "__main__":
