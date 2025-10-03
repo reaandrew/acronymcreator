@@ -6,6 +6,8 @@ import json
 import click
 from .core import AcronymCreator, AcronymOptions
 
+# Trigger CI build
+
 
 @click.command()
 @click.argument("phrase", required=True)
