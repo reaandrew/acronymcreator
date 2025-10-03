@@ -64,9 +64,10 @@ jobs:
 
           Please:
           1. Check the failed workflow logs using gh CLI or WebFetch
-          2. Identify the root cause (likely undefined_variable in src/acronymcreator/cli.py line 67)
+          2. Identify the root cause
           3. Fix the issue by editing the file
           4. Commit the fix
           5. Push to the current branch
+          6. After pushing, trigger CI to run again using: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
 
-          Make sure to actually push your changes so CI can re-run!
+          IMPORTANT: You must run step 6 to trigger the CI workflow, as commits from GitHub Actions don't automatically trigger workflows!
