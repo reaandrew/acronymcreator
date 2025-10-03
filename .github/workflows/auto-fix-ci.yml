@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  actions: read
+  actions: write
 
 jobs:
   notify-claude:
@@ -68,6 +68,6 @@ jobs:
           3. Fix the issue by editing the file
           4. Commit the fix
           5. Push to the current branch
-          6. After pushing, trigger CI to run again using: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
+          6. ONLY AFTER YOU HAVE COMPLETELY FINISHED ALL FIXES AND PUSHED: Trigger CI to re-run using: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
 
-          IMPORTANT: You must run step 6 to trigger the CI workflow, as commits from GitHub Actions don't automatically trigger workflows!
+          IMPORTANT: Step 6 must be the ABSOLUTE LAST action you take, after all fixes are complete and pushed. Commits from GitHub Actions don't automatically trigger workflows, so you MUST manually trigger CI!
