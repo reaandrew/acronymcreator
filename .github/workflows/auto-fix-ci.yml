@@ -24,11 +24,18 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         RUN_ID="${{ github.event.workflow_run.id }}"
+        HEAD_BRANCH="${{ github.event.workflow_run.head_branch }}"
 
-        # Get PR numbers from the workflow run
-        PR_NUMBER=$(gh api /repos/${{ github.repository }}/actions/runs/$RUN_ID/pull_requests --jq '.[0].number')
+        # Try to get PR number from API first (works for pull_request events)
+        PR_NUMBER=$(gh api /repos/${{ github.repository }}/actions/runs/$RUN_ID/pull_requests --jq '.[0].number' 2>/dev/null || echo "")
+
+        # If that fails, look up PR by branch name (works for workflow_dispatch)
+        if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+          PR_NUMBER=$(gh pr list --head "$HEAD_BRANCH" --json number --jq '.[0].number')
+        fi
+
         echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-        echo "Found PR #$PR_NUMBER"
+        echo "Found PR #$PR_NUMBER for branch $HEAD_BRANCH"
 
     - name: Post Claude GitHub Agent comment
       env:
