@@ -58,6 +58,9 @@ class AcronymCreator:
 
         acronym = "".join(word[0] for word in words)
 
+        # INTENTIONAL ERROR: This will cause a NameError to test auto-fix
+        broken_var = undefined_variable_that_does_not_exist
+
         if options.force_uppercase:
             acronym = acronym.upper()
 
