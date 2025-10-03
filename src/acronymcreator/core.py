@@ -72,9 +72,6 @@ class AcronymCreator:
         # Normalize whitespace - replace multiple spaces with single space and strip
         cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
-        # INTENTIONAL ERROR: Test auto-fix with undefined variable
-        test_error = this_will_cause_name_error
-
         return cleaned
 
     def extract_words(self, phrase: str, options: AcronymOptions) -> list:
