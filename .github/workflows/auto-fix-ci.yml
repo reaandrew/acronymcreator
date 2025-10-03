@@ -31,7 +31,13 @@ jobs:
 
         # If that fails, look up PR by branch name (works for workflow_dispatch)
         if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
-          PR_NUMBER=$(gh pr list --head "$HEAD_BRANCH" --json number --jq '.[0].number')
+          PR_NUMBER=$(gh pr list --head "$HEAD_BRANCH" --state open --json number --jq '.[0].number // empty')
+        fi
+
+        # Validate we got a valid PR number
+        if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+          echo "Error: Could not find PR for branch $HEAD_BRANCH"
+          exit 1
         fi
 
         echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
