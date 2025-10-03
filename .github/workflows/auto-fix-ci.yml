@@ -51,8 +51,28 @@ jobs:
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        additional_permissions: "Bash,WebFetch,Edit,Write,Read,Glob,Grep"
-        allowed_files: "src/**/*,tests/**/*,.github/**/*,*.py,*.yml,*.yaml,*.md,*.txt,*.json,*.toml,*.ini,*.cfg"
+        allowed_tools: |
+          Bash(gh:*)
+          Bash(git:*)
+          Bash(jq:*)
+          WebFetch
+          Read
+          Edit
+          Write
+          Grep
+          Glob
+        allowed_paths: |
+          ./src/**
+          ./tests/**
+          ./.github/**
+          ./*.py
+          ./*.yml
+          ./*.yaml
+          ./*.md
+          ./*.json
+          ./*.toml
+          ./*.ini
+          ./*.cfg
         prompt: |
           The CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
