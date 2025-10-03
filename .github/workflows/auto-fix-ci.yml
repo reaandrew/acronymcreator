@@ -40,20 +40,18 @@ jobs:
         echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
         echo "Found PR #$PR_NUMBER"
 
-    - name: Post Claude GitHub Agent comment
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        REPO: ${{ github.repository }}
-      run: |
-        PR_NUMBER="${{ steps.get-pr.outputs.pr_number }}"
-        RUN_ID="${{ github.event.workflow_run.id }}"
+    - name: Invoke Claude to fix CI failure
+      uses: anthropics/claude-code-action@v1
+      with:
+        anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        prompt: |
+          The CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
-        gh pr comment "$PR_NUMBER" --body "@claude The CI workflow failed for this PR.
+          Workflow Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
 
-        Workflow Run: https://github.com/${REPO}/actions/runs/${RUN_ID}
-
-        Please:
-        1. Check the failed workflow logs
-        2. Identify the root cause
-        3. Fix the issue
-        4. Push the fixes to this PR"
+          Please:
+          1. Check the failed workflow logs
+          2. Identify the root cause
+          3. Fix the issue
+          4. Push the fixes to this PR
