@@ -2,6 +2,7 @@
 Tests for the CLI module.
 """
 
+import json
 from click.testing import CliRunner
 from src.acronymcreator.cli import main
 
@@ -55,3 +56,32 @@ class TestCLI:
         result = self.runner.invoke(main, ["--version"])
         assert result.exit_code == 0
         assert "0.1.0" in result.output
+
+    def test_cli_json_output(self):
+        """Test CLI with JSON output format."""
+        result = self.runner.invoke(main, ["Hello World", "--format", "json"])
+        assert result.exit_code == 0
+        output = json.loads(result.output)
+        assert output["phrase"] == "Hello World"
+        assert output["acronym"] == "HW"
+        assert "options" in output
+
+    def test_cli_json_output_with_options(self):
+        """Test CLI with JSON output and various options."""
+        result = self.runner.invoke(
+            main,
+            [
+                "The Quick Brown Fox",
+                "--format",
+                "json",
+                "--include-articles",
+                "--min-length",
+                "1",
+            ],
+        )
+        assert result.exit_code == 0
+        output = json.loads(result.output)
+        assert output["phrase"] == "The Quick Brown Fox"
+        assert output["acronym"] == "TQBF"
+        assert output["options"]["include_articles"] is True
+        assert output["options"]["min_word_length"] == 1
