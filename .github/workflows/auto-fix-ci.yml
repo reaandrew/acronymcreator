@@ -48,14 +48,12 @@ jobs:
         PR_NUMBER="${{ steps.get-pr.outputs.pr_number }}"
         RUN_ID="${{ github.event.workflow_run.id }}"
 
-        COMMENT="@claude The CI workflow failed for this PR.
+        gh pr comment "$PR_NUMBER" --body "@claude The CI workflow failed for this PR.
 
-**Workflow Run:** https://github.com/${REPO}/actions/runs/${RUN_ID}
+        Workflow Run: https://github.com/${REPO}/actions/runs/${RUN_ID}
 
-Please:
-1. Check the failed workflow logs
-2. Identify the root cause
-3. Fix the issue
-4. Push the fixes to this PR"
-
-        gh pr comment "$PR_NUMBER" --body "$COMMENT"
+        Please:
+        1. Check the failed workflow logs
+        2. Identify the root cause
+        3. Fix the issue
+        4. Push the fixes to this PR"
