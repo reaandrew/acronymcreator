@@ -49,13 +49,14 @@ jobs:
       with:
         ref: ${{ steps.get-pr.outputs.pr_branch }}
         fetch-depth: 0
+        token: ${{ secrets.AUTO_FIX_PAT }}
 
     - name: Invoke Claude to fix CI failure
       id: claude-fix
       uses: anthropics/claude-code-action@v1
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.AUTO_FIX_PAT }}
         additional_permissions: "Bash,WebFetch,Edit,Write,Read,Glob,Grep"
         allowed_files: "src/**/*,tests/**/*,.github/**/*,*.py,*.yml,*.yaml,*.md,*.txt,*.json,*.toml,*.ini,*.cfg"
         prompt: |
@@ -90,17 +91,13 @@ jobs:
              - Include Co-Authored-By: Claude <noreply@anthropic.com>
              - Example: "fix: remove undefined variable causing NameError"
              - Commit and push to ${{ steps.get-pr.outputs.pr_branch }}
-
-          5. TRIGGER CI (ABSOLUTE LAST STEP)
-             - Run: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
-             - This must be the final action after everything is complete
+             - The push will automatically trigger CI (using PAT, not GITHUB_TOKEN)
 
           CRITICAL RULES:
           - Steps must be executed in order
           - Do NOT skip validation (step 3)
           - Do NOT commit if pre-commit hooks fail
-          - Do NOT trigger CI until after pushing
-          - Commits from GitHub Actions don't auto-trigger workflows
+          - Push will automatically trigger pull_request event and re-run CI
 
     - name: Report token usage
       if: always()
