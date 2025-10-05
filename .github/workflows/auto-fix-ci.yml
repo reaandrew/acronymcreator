@@ -54,18 +54,42 @@ jobs:
         additional_permissions: "Bash,WebFetch,Edit,Write,Read,Glob,Grep"
         allowed_files: "src/**/*,tests/**/*,.github/**/*,*.py,*.yml,*.yaml,*.md,*.txt,*.json,*.toml,*.ini,*.cfg"
         prompt: |
-          The CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
+          CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
-          Workflow Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+          Branch: ${{ steps.get-pr.outputs.pr_branch }}
+          Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
 
-          You are currently on branch ${{ steps.get-pr.outputs.pr_branch }}.
+          Follow this workflow:
 
-          Please:
-          1. Check the failed workflow logs using gh CLI or WebFetch
-          2. Identify the root cause
-          3. Fix the issue by editing the file
-          4. Commit the fix
-          5. Push to the current branch
-          6. ONLY AFTER YOU HAVE COMPLETELY FINISHED ALL FIXES AND PUSHED: Trigger CI to re-run using: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
+          1. ANALYZE FAILURE
+             - Read .claude/agents/ci-failure-analyzer.md
+             - Follow its instructions to analyze the CI failure
+             - Identify root cause with confidence level
+             - Understand blast radius and error category
 
-          IMPORTANT: Step 6 must be the ABSOLUTE LAST action you take, after all fixes are complete and pushed. Commits from GitHub Actions don't automatically trigger workflows, so you MUST manually trigger CI!
+          2. FIX THE ISSUE
+             - Based on your analysis, fix the identified problem
+             - Edit the problematic file(s)
+             - Apply the minimum necessary changes
+
+          3. VALIDATE FIXES
+             - Read .claude/agents/precommit-validator.md
+             - Follow its instructions to validate your fixes
+             - Run all pre-commit hooks
+             - Auto-stage any files modified by hooks
+             - Ensure all hooks pass before proceeding
+
+          4. COMMIT AND PUSH (only if validation passes)
+             - Commit the fix with a conventional commit message
+             - Push to ${{ steps.get-pr.outputs.pr_branch }}
+
+          5. TRIGGER CI (ABSOLUTE LAST STEP)
+             - Run: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
+             - This must be the final action after everything is complete
+
+          CRITICAL RULES:
+          - Steps must be executed in order
+          - Do NOT skip validation (step 3)
+          - Do NOT commit if pre-commit hooks fail
+          - Do NOT trigger CI until after pushing
+          - Commits from GitHub Actions don't auto-trigger workflows
