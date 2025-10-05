@@ -51,6 +51,7 @@ jobs:
         fetch-depth: 0
 
     - name: Invoke Claude to fix CI failure
+      id: claude-fix
       uses: anthropics/claude-code-action@v1
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -100,3 +101,48 @@ jobs:
           - Do NOT commit if pre-commit hooks fail
           - Do NOT trigger CI until after pushing
           - Commits from GitHub Actions don't auto-trigger workflows
+
+    - name: Report token usage
+      if: always()
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        INPUT_TOKENS="${{ steps.claude-fix.outputs.input_tokens || 0 }}"
+        OUTPUT_TOKENS="${{ steps.claude-fix.outputs.output_tokens || 0 }}"
+        RUN_TOTAL=$((INPUT_TOKENS + OUTPUT_TOKENS))
+        RUN_COST=$(echo "scale=4; ($INPUT_TOKENS * 3 + $OUTPUT_TOKENS * 15) / 1000000" | bc)
+
+        # Find existing token tracking comment
+        COMMENT_ID=$(gh pr view ${{ steps.get-pr.outputs.pr_number }} --json comments --jq '.comments[] | select(.body | contains("## 📊 Auto-fix Token Usage Tracker")) | .id' | head -1)
+
+        if [ -z "$COMMENT_ID" ]; then
+          # Create new tracking comment with first run
+          gh pr comment ${{ steps.get-pr.outputs.pr_number }} --body "## 📊 Auto-fix Token Usage Tracker
+
+        | Run | Input | Output | Total | Cost |
+        |-----|-------|--------|-------|------|
+        | [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) | $(printf "%'d" $INPUT_TOKENS) | $(printf "%'d" $OUTPUT_TOKENS) | $(printf "%'d" $RUN_TOTAL) | \$$RUN_COST |
+        | **PR Total** | **$(printf "%'d" $INPUT_TOKENS)** | **$(printf "%'d" $OUTPUT_TOKENS)** | **$(printf "%'d" $RUN_TOTAL)** | **\$$RUN_COST** |"
+        else
+          # Get existing comment body
+          EXISTING_BODY=$(gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID --jq .body)
+
+          # Extract current totals from the "PR Total" row
+          PREV_INPUT=$(echo "$EXISTING_BODY" | grep "| \*\*PR Total\*\*" | awk -F'|' '{print $3}' | tr -d ' *,')
+          PREV_OUTPUT=$(echo "$EXISTING_BODY" | grep "| \*\*PR Total\*\*" | awk -F'|' '{print $4}' | tr -d ' *,')
+
+          # Calculate new totals
+          NEW_INPUT=$((PREV_INPUT + INPUT_TOKENS))
+          NEW_OUTPUT=$((PREV_OUTPUT + OUTPUT_TOKENS))
+          NEW_TOTAL=$((NEW_INPUT + NEW_OUTPUT))
+          NEW_COST=$(echo "scale=4; ($NEW_INPUT * 3 + $NEW_OUTPUT * 15) / 1000000" | bc)
+
+          # Build new table row
+          NEW_ROW="| [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) | $(printf "%'d" $INPUT_TOKENS) | $(printf "%'d" $OUTPUT_TOKENS) | $(printf "%'d" $RUN_TOTAL) | \$$RUN_COST |"
+
+          # Replace PR Total row with new row + updated total
+          UPDATED_BODY=$(echo "$EXISTING_BODY" | sed "s|.*\*\*PR Total\*\*.*|$NEW_ROW\n| **PR Total** | **$(printf "%'d" $NEW_INPUT)** | **$(printf "%'d" $NEW_OUTPUT)** | **$(printf "%'d" $NEW_TOTAL)** | **\$$NEW_COST** ||")
+
+          # Update comment
+          gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID -X PATCH -f body="$UPDATED_BODY"
+        fi
