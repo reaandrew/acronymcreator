@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+concurrency:
+  group: auto-fix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -80,8 +84,11 @@ jobs:
              - Ensure all hooks pass before proceeding
 
           4. COMMIT AND PUSH (only if validation passes)
-             - Commit the fix with a conventional commit message
-             - Push to ${{ steps.get-pr.outputs.pr_branch }}
+             - Generate conventional commit message using format:
+               "fix: <brief description of what was fixed>"
+             - Include Co-Authored-By: Claude <noreply@anthropic.com>
+             - Example: "fix: remove undefined variable causing NameError"
+             - Commit and push to ${{ steps.get-pr.outputs.pr_branch }}
 
           5. TRIGGER CI (ABSOLUTE LAST STEP)
              - Run: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
