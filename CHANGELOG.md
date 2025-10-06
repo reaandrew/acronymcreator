@@ -1,3 +1,51 @@
+## [1.6.0](https://github.com/reaandrew/acronymcreator/compare/v1.5.4...v1.6.0) (2025-10-06)
+
+### Features
+
+* add concurrency control to cancel previous CI runs ([8f91647](https://github.com/reaandrew/acronymcreator/commit/8f916473ce7232639b7281bc6eb7a6ba48a3c3f8))
+* add JSON export functionality ([#4](https://github.com/reaandrew/acronymcreator/issues/4)) ([4a1a0cc](https://github.com/reaandrew/acronymcreator/commit/4a1a0ccc00a29783d48114b16e5bef0e1ec66880))
+
+### Bug Fixes
+
+* add actions:write permission and clarify CI trigger timing ([7891ce2](https://github.com/reaandrew/acronymcreator/commit/7891ce22590559d9a8b061c8c032ff3c0f03c302))
+* add allowed_files to auto-fix workflow for file edit permissions ([1fa5095](https://github.com/reaandrew/acronymcreator/commit/1fa5095bdaef4ed419875d99d49867371151e47f))
+* add checkout step for gh pr comment ([9ad29f0](https://github.com/reaandrew/acronymcreator/commit/9ad29f05cea9d540ac0590213269468dcfe4400c))
+* add timeouts to SonarCloud quality gate check to prevent hanging ([0eb4311](https://github.com/reaandrew/acronymcreator/commit/0eb4311b31f69ebe62c52fbbb26aedd4f24809c5))
+* auto-fix workflow should trigger on workflow_dispatch events too ([f750146](https://github.com/reaandrew/acronymcreator/commit/f75014655c79bc804d4e1700b8b4d863b7a19bc4))
+* checkout PR branch in auto-fix workflow ([6241421](https://github.com/reaandrew/acronymcreator/commit/6241421194c76b3ca7b394502d70afcea8abdbd4))
+* **ci:** amend Claude's commit instead of creating empty trigger commit ([ca6ac8a](https://github.com/reaandrew/acronymcreator/commit/ca6ac8abfa62458f989c1e5043f3c07b67c4b500))
+* **ci:** complete v1 migration and remove test error ([522aea2](https://github.com/reaandrew/acronymcreator/commit/522aea293b273a36ec98010bc290a225afcc7d57))
+* **ci:** complete v1 migration with PATH, loop guard, and git author config ([77c04fe](https://github.com/reaandrew/acronymcreator/commit/77c04fe491f0d25bf56796db7f26f46d085d5178))
+* **ci:** remove invalid allowed_files parameter blocking file edits ([eb0a9d7](https://github.com/reaandrew/acronymcreator/commit/eb0a9d7d2e2f0a8fe3bb8e20208cc4aa631b584f))
+* **ci:** remove invalid allowed_files parameter blocking file edits ([69e00d9](https://github.com/reaandrew/acronymcreator/commit/69e00d9159dbc2ab318e04f673dd43b134f8a939))
+* **ci:** remove redundant trigger step, Claude's commit already triggers CI ([caa9a0f](https://github.com/reaandrew/acronymcreator/commit/caa9a0f522c89ad7c16ee821a84b22d6c30ca3f1))
+* **ci:** remove token usage tracking step causing failures ([2795051](https://github.com/reaandrew/acronymcreator/commit/27950512950339eb9f1b17bec1bd8d817e1313c2))
+* **ci:** set permissionMode to always-allow to enable file edits ([fb57892](https://github.com/reaandrew/acronymcreator/commit/fb57892df3596b8b4c97c1056ba663066d8d8394))
+* **ci:** set permissionMode to always-allow to enable file edits ([cc227fc](https://github.com/reaandrew/acronymcreator/commit/cc227fc2a5a0ce7e4d24309b7538a87e256e22e8))
+* **ci:** use acceptEdits permission mode with allowed tools ([4ce76fa](https://github.com/reaandrew/acronymcreator/commit/4ce76fa7f9c4aa40025fb4fdc0b609f35286de07))
+* **ci:** use acceptEdits permission mode with allowed tools ([c847875](https://github.com/reaandrew/acronymcreator/commit/c847875de0117ca6fe8240e0eccdc93bb44ebcd1))
+* correct allowedTools syntax - use simple comma-separated list ([ace8d0f](https://github.com/reaandrew/acronymcreator/commit/ace8d0f3ae435f5446ebbbd6452671db7dd6c0a3))
+* disable Go cache for lefthook installation ([f227940](https://github.com/reaandrew/acronymcreator/commit/f22794070755f494665adfa75f68f8752d3ce300))
+* fallback to PR lookup by branch name for workflow_dispatch events ([6c5d484](https://github.com/reaandrew/acronymcreator/commit/6c5d4846883b1bebf2e4a93f388d1b1f00b09a2d))
+* get PR number from workflow run object correctly ([f8bf96f](https://github.com/reaandrew/acronymcreator/commit/f8bf96f7a5f0faedb3980d959423565805f0e1cb))
+* grant Claude additional permissions for Bash, WebFetch, Edit tools ([8ed81d0](https://github.com/reaandrew/acronymcreator/commit/8ed81d0c2d7a93cd93854abfa99156cb2d3d2590))
+* improve lefthook configuration for GitGuardian and pytest hooks ([d6b696a](https://github.com/reaandrew/acronymcreator/commit/d6b696acbfaa8f3ef3ac3633ebf50824728023c4))
+* improve PR number lookup error handling ([0f6bf3f](https://github.com/reaandrew/acronymcreator/commit/0f6bf3f26ea061eddd52a0615f14d852cd66ad76))
+* instruct Claude to trigger CI after pushing fixes ([2b3239f](https://github.com/reaandrew/acronymcreator/commit/2b3239f9e97dfd3d30475a444e599b47efc59cf4))
+* invoke Claude Code Action directly instead of posting comment ([0cb3e46](https://github.com/reaandrew/acronymcreator/commit/0cb3e463e80ec59a138938ddb2101d3513abd9a9))
+* properly quote multiline comment body ([cbb5f78](https://github.com/reaandrew/acronymcreator/commit/cbb5f784be6607225ae4612ffabc1712194c0211))
+* remove broken branch-ci workflow and add manual CI trigger ([d32bafc](https://github.com/reaandrew/acronymcreator/commit/d32bafc976e78168aa80b40404c21433e7c52ffa))
+* remove markdown bold syntax causing YAML error ([249df9a](https://github.com/reaandrew/acronymcreator/commit/249df9a4f9e1bed78cd821d41f226cebfec20d5f))
+* resolve SonarCloud MAJOR issues ([378a3e6](https://github.com/reaandrew/acronymcreator/commit/378a3e6f3d915e323038bcc7c01bd505128b1e95))
+* revert to valid v1 additional_permissions parameter ([845a087](https://github.com/reaandrew/acronymcreator/commit/845a087d10394e545fbad511dab8f50b898236d4))
+* update auto-fix workflow to properly get PR number ([915a009](https://github.com/reaandrew/acronymcreator/commit/915a009099e495598a75cce7c3afd4b47a440ec0))
+* update CI workflow to properly install lefthook and fix GitGuardian secret name ([a1989b8](https://github.com/reaandrew/acronymcreator/commit/a1989b888b2ef48d3b77e4aa7ca4caab28ddc627))
+* use claude_args --allowedTools for v1 tool permissions ([3fabda7](https://github.com/reaandrew/acronymcreator/commit/3fabda7a433e01f8b95d19573e3e64a0f1b37983))
+* use correct allowed_tools parameter for Claude Code Action ([c41f0af](https://github.com/reaandrew/acronymcreator/commit/c41f0afc18e5724fb1312d7db00d5e660b56db4d))
+* use full path to lefthook in CI to avoid PATH timing issues ([3fe2e9a](https://github.com/reaandrew/acronymcreator/commit/3fe2e9aca2947d95093777f456ff1a555c348b1c))
+* use Go to install lefthook instead of curl script ([174104e](https://github.com/reaandrew/acronymcreator/commit/174104e93dc3e4f84c30df741e9ff7b474f85367))
+* use proper variable expansion in comment body ([880b8b4](https://github.com/reaandrew/acronymcreator/commit/880b8b4bd495fea59c781bce338c8eb822e37883))
+
 ## [1.5.4](https://github.com/reaandrew/acronymcreator/compare/v1.5.3...v1.5.4) (2025-06-15)
 
 ### Bug Fixes
