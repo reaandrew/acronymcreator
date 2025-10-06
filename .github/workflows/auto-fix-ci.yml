@@ -104,12 +104,17 @@ jobs:
           Follow this workflow:
 
           1. ANALYZE FAILURE
-             - Read .claude/agents/ci-failure-analyzer.md
-             - Identify root cause with confidence level
+             - First, get CI logs: gh run view ${{ github.event.workflow_run.id }} --log | tail -100
+             - Identify root cause from logs (don't read full files yet)
+             - Only read specific files if error location is unclear
 
           2. FIX THE ISSUE
-             - Edit the problematic file(s)
+             - Edit the problematic file(s) directly
              - Minimum necessary changes
+             - If adding new dependencies/tools:
+               * Update pre-commit-config.yaml
+               * Update lefthook.yml (if tool needs PATH access)
+               * Update pyproject.toml [project.optional-dependencies]
              - If implementing new CLI functionality, update README.md with:
                * Examples demonstrating the new feature
                * Usage patterns consistent with existing documentation
@@ -117,8 +122,7 @@ jobs:
                * Follow the same detailed style as existing CLI examples
 
           3. VALIDATE FIXES
-             - Read .claude/agents/precommit-validator.md
-             - Run all pre-commit hooks
+             - Run all pre-commit hooks: pre-commit run --all-files
              - Auto-stage any files modified by hooks
              - Ensure all hooks pass
 
@@ -133,3 +137,11 @@ jobs:
           - Do NOT commit if pre-commit hooks fail
           - Do NOT manually trigger workflows - your commit will automatically trigger CI
           - ALWAYS update documentation when adding new features
+
+          EFFICIENCY RULES:
+          - Do NOT read files multiple times
+          - Do NOT explore - fix directly based on CI logs
+          - Do NOT read agent files unless absolutely necessary
+          - Use grep/glob for targeted searches only when needed
+          - NO exploratory reading after fixing (e.g., lefthook.yml)
+          - Focus on the specific failure, nothing else
