@@ -24,11 +24,17 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Prepare PATH
+      run: |
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$(go env GOPATH 2>/dev/null || echo $HOME/go)/bin" >> $GITHUB_PATH
+
     - name: Claude Code Action Official
       uses: anthropics/claude-code-action@v1
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.AUTO_FIX_PAT }}
         trigger_phrase: "@claude"
-        additional_permissions: "Bash,WebFetch,Edit,Write,Read,Glob,Grep"
-        allowed_files: "src/**/*,tests/**/*,.github/**/*,*.py,*.yml,*.yaml,*.md"
+        claude_args: |
+          --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,WebFetch,WebSearch,Bash(*)"
+          --max-turns 20
