@@ -94,7 +94,7 @@ jobs:
         claude_args: |
           --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,WebFetch,WebSearch,Bash(*)"
           --dangerously-skip-permissions
-          --max-turns 20
+          --max-turns 50
         prompt: |
           CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
