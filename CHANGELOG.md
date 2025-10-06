@@ -1,3 +1,9 @@
+## [1.8.1](https://github.com/reaandrew/acronymcreator/compare/v1.8.0...v1.8.1) (2025-10-06)
+
+### Bug Fixes
+
+* **ci:** add CI environment guidance to auto-fix workflow ([66b8c74](https://github.com/reaandrew/acronymcreator/commit/66b8c74dac0a096003b3eda35aec2744ccaa27aa))
+
 ## [1.8.0](https://github.com/reaandrew/acronymcreator/compare/v1.7.0...v1.8.0) (2025-10-06)
 
 ### Features
