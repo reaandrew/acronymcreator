@@ -110,6 +110,11 @@ jobs:
           2. FIX THE ISSUE
              - Edit the problematic file(s)
              - Minimum necessary changes
+             - If implementing new CLI functionality, update README.md with:
+               * Examples demonstrating the new feature
+               * Usage patterns consistent with existing documentation
+               * Real-world use cases where applicable
+               * Follow the same detailed style as existing CLI examples
 
           3. VALIDATE FIXES
              - Read .claude/agents/precommit-validator.md
@@ -127,3 +132,4 @@ jobs:
           - Do NOT skip validation (step 3)
           - Do NOT commit if pre-commit hooks fail
           - Do NOT manually trigger workflows - your commit will automatically trigger CI
+          - ALWAYS update documentation when adding new features
