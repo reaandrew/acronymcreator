@@ -59,7 +59,19 @@ jobs:
         github_token: ${{ secrets.AUTO_FIX_PAT }}
         settings: |
           {
-            "permissionMode": "always-allow"
+            "permissionMode": "acceptEdits",
+            "permissions": {
+              "allow": [
+                "Edit",
+                "Write",
+                "Read",
+                "Glob",
+                "Grep",
+                "Bash(git *)",
+                "Bash(pre-commit *)",
+                "Bash(pytest *)"
+              ]
+            }
           }
         prompt: |
           CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
