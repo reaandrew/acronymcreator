@@ -1,3 +1,9 @@
+## [1.9.1](https://github.com/reaandrew/acronymcreator/compare/v1.9.0...v1.9.1) (2025-10-06)
+
+### Bug Fixes
+
+* **ci:** increase max-turns for Claude Code action from 20 to 50 ([5a59a38](https://github.com/reaandrew/acronymcreator/commit/5a59a38b7c29d69efa775aa3eb51aa5a66417521))
+
 ## [1.9.0](https://github.com/reaandrew/acronymcreator/compare/v1.8.1...v1.9.0) (2025-10-06)
 
 ### Features
