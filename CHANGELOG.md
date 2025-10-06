@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/reaandrew/acronymcreator/compare/v1.7.0...v1.8.0) (2025-10-06)
+
+### Features
+
+* optimize auto-fix workflow for efficiency ([421dbcc](https://github.com/reaandrew/acronymcreator/commit/421dbcc0cb4ab5d2e27bfd80a461c5eeddbbd281))
+
 ## [1.7.0](https://github.com/reaandrew/acronymcreator/compare/v1.6.0...v1.7.0) (2025-10-06)
 
 ### Features
