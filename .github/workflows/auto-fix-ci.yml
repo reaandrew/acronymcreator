@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+concurrency:
+  group: auto-fix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -45,29 +49,107 @@ jobs:
       with:
         ref: ${{ steps.get-pr.outputs.pr_branch }}
         fetch-depth: 0
+        token: ${{ secrets.AUTO_FIX_PAT }}
 
     - name: Invoke Claude to fix CI failure
+      id: claude-fix
       uses: anthropics/claude-code-action@v1
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        additional_permissions: |
-          actions: read
-        claude_args: |
-          --allowedTools "Bash,WebFetch,Read,Edit,Write,Grep,Glob"
+        github_token: ${{ secrets.AUTO_FIX_PAT }}
+        additional_permissions: "Bash,WebFetch,Edit,Write,Read,Glob,Grep"
+        allowed_files: "src/**/*,tests/**/*,.github/**/*,*.py,*.yml,*.yaml,*.md,*.txt,*.json,*.toml,*.ini,*.cfg"
         prompt: |
-          The CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
+          CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
-          Workflow Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+          Branch: ${{ steps.get-pr.outputs.pr_branch }}
+          Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
 
-          You are currently on branch ${{ steps.get-pr.outputs.pr_branch }}.
+          Follow this workflow:
 
-          Please:
-          1. Check the failed workflow logs using gh CLI or WebFetch
-          2. Identify the root cause
-          3. Fix the issue by editing the file
-          4. Commit the fix
-          5. Push to the current branch
-          6. ONLY AFTER YOU HAVE COMPLETELY FINISHED ALL FIXES AND PUSHED: Trigger CI to re-run using: gh workflow run ci.yml --ref ${{ steps.get-pr.outputs.pr_branch }}
+          1. ANALYZE FAILURE
+             - Read .claude/agents/ci-failure-analyzer.md
+             - Follow its instructions to analyze the CI failure
+             - Identify root cause with confidence level
+             - Understand blast radius and error category
 
-          IMPORTANT: Step 6 must be the ABSOLUTE LAST action you take, after all fixes are complete and pushed. Commits from GitHub Actions don't automatically trigger workflows, so you MUST manually trigger CI!
+          2. FIX THE ISSUE
+             - Based on your analysis, fix the identified problem
+             - Edit the problematic file(s)
+             - Apply the minimum necessary changes
+
+          3. VALIDATE FIXES
+             - Read .claude/agents/precommit-validator.md
+             - Follow its instructions to validate your fixes
+             - Run all pre-commit hooks
+             - Auto-stage any files modified by hooks
+             - Ensure all hooks pass before proceeding
+
+          4. COMMIT AND PUSH (only if validation passes)
+             - Generate conventional commit message using format:
+               "fix: <brief description of what was fixed>"
+             - Include Co-Authored-By: Claude <noreply@anthropic.com>
+             - Example: "fix: remove undefined variable causing NameError"
+             - Commit and push to ${{ steps.get-pr.outputs.pr_branch }}
+             - Note: The workflow will trigger CI automatically after you finish
+
+          CRITICAL RULES:
+          - Steps must be executed in order
+          - Do NOT skip validation (step 3)
+          - Do NOT commit if pre-commit hooks fail
+          - Do NOT manually trigger workflows - the workflow handles it
+
+    - name: Report token usage
+      if: always()
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        INPUT_TOKENS="${{ steps.claude-fix.outputs.input_tokens || 0 }}"
+        OUTPUT_TOKENS="${{ steps.claude-fix.outputs.output_tokens || 0 }}"
+        RUN_TOTAL=$((INPUT_TOKENS + OUTPUT_TOKENS))
+        RUN_COST=$(echo "scale=4; ($INPUT_TOKENS * 3 + $OUTPUT_TOKENS * 15) / 1000000" | bc)
+
+        # Find existing token tracking comment
+        COMMENT_ID=$(gh pr view ${{ steps.get-pr.outputs.pr_number }} --json comments --jq '.comments[] | select(.body | contains("## 📊 Auto-fix Token Usage Tracker")) | .id' | head -1)
+
+        if [ -z "$COMMENT_ID" ]; then
+          # Create new tracking comment with first run
+          gh pr comment ${{ steps.get-pr.outputs.pr_number }} --body "## 📊 Auto-fix Token Usage Tracker
+
+        | Run | Input | Output | Total | Cost |
+        |-----|-------|--------|-------|------|
+        | [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) | $(printf "%'d" $INPUT_TOKENS) | $(printf "%'d" $OUTPUT_TOKENS) | $(printf "%'d" $RUN_TOTAL) | \$$RUN_COST |
+        | **PR Total** | **$(printf "%'d" $INPUT_TOKENS)** | **$(printf "%'d" $OUTPUT_TOKENS)** | **$(printf "%'d" $RUN_TOTAL)** | **\$$RUN_COST** |"
+        else
+          # Get existing comment body
+          EXISTING_BODY=$(gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID --jq .body)
+
+          # Extract current totals from the "PR Total" row
+          PREV_INPUT=$(echo "$EXISTING_BODY" | grep "| \*\*PR Total\*\*" | awk -F'|' '{print $3}' | tr -d ' *,')
+          PREV_OUTPUT=$(echo "$EXISTING_BODY" | grep "| \*\*PR Total\*\*" | awk -F'|' '{print $4}' | tr -d ' *,')
+
+          # Calculate new totals
+          NEW_INPUT=$((PREV_INPUT + INPUT_TOKENS))
+          NEW_OUTPUT=$((PREV_OUTPUT + OUTPUT_TOKENS))
+          NEW_TOTAL=$((NEW_INPUT + NEW_OUTPUT))
+          NEW_COST=$(echo "scale=4; ($NEW_INPUT * 3 + $NEW_OUTPUT * 15) / 1000000" | bc)
+
+          # Build new table row
+          NEW_ROW="| [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) | $(printf "%'d" $INPUT_TOKENS) | $(printf "%'d" $OUTPUT_TOKENS) | $(printf "%'d" $RUN_TOTAL) | \$$RUN_COST |"
+
+          # Replace PR Total row with new row + updated total
+          UPDATED_BODY=$(echo "$EXISTING_BODY" | sed "s|.*\*\*PR Total\*\*.*|$NEW_ROW\n| **PR Total** | **$(printf "%'d" $NEW_INPUT)** | **$(printf "%'d" $NEW_OUTPUT)** | **$(printf "%'d" $NEW_TOTAL)** | **\$$NEW_COST** ||")
+
+          # Update comment
+          gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID -X PATCH -f body="$UPDATED_BODY"
+        fi
+
+    - name: Trigger CI re-run with empty commit
+      if: success()
+      run: |
+        # Claude commits as claude[bot] which doesn't trigger pull_request events
+        # We need to make an additional commit to trigger CI
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git commit --allow-empty -m "ci: trigger workflow after auto-fix"
+        git push
