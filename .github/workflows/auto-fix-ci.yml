@@ -91,13 +91,13 @@ jobs:
              - Include Co-Authored-By: Claude <noreply@anthropic.com>
              - Example: "fix: remove undefined variable causing NameError"
              - Commit and push to ${{ steps.get-pr.outputs.pr_branch }}
-             - The push will automatically trigger CI (using PAT, not GITHUB_TOKEN)
+             - Note: The workflow will trigger CI automatically after you finish
 
           CRITICAL RULES:
           - Steps must be executed in order
           - Do NOT skip validation (step 3)
           - Do NOT commit if pre-commit hooks fail
-          - Push will automatically trigger pull_request event and re-run CI
+          - Do NOT manually trigger workflows - the workflow handles it
 
     - name: Report token usage
       if: always()
@@ -143,3 +143,13 @@ jobs:
           # Update comment
           gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID -X PATCH -f body="$UPDATED_BODY"
         fi
+
+    - name: Trigger CI re-run with empty commit
+      if: success()
+      run: |
+        # Claude commits as claude[bot] which doesn't trigger pull_request events
+        # We need to make an additional commit to trigger CI
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git commit --allow-empty -m "ci: trigger workflow after auto-fix"
+        git push
