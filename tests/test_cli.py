@@ -85,3 +85,29 @@ class TestCLI:
         assert output["acronym"] == "TQBF"
         assert output["options"]["include_articles"] is True
         assert output["options"]["min_word_length"] == 1
+
+    def test_cli_yaml_output(self):
+        """Test CLI with YAML output format."""
+        result = self.runner.invoke(main, ["Hello World", "--format", "yaml"])
+        assert result.exit_code == 0
+        assert "phrase: Hello World" in result.output
+        assert "acronym: HW" in result.output
+        assert "options:" in result.output
+
+    def test_cli_yaml_output_with_options(self):
+        """Test CLI with YAML output and various options."""
+        result = self.runner.invoke(
+            main,
+            [
+                "The Quick Brown Fox",
+                "--format",
+                "yaml",
+                "--include-articles",
+                "--lowercase",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "phrase: The Quick Brown Fox" in result.output
+        assert "acronym: tqbf" in result.output
+        assert "include_articles: true" in result.output
+        assert "lowercase: true" in result.output
