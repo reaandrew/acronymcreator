@@ -1,3 +1,13 @@
+## [1.7.0](https://github.com/reaandrew/acronymcreator/compare/v1.6.0...v1.7.0) (2025-10-06)
+
+### Features
+
+* enhance auto-fix workflow to update documentation ([e112ea3](https://github.com/reaandrew/acronymcreator/commit/e112ea37c5d27e0890eb60c291a2d42dc64b56c1))
+
+### Bug Fixes
+
+* increase auto-fix max-turns from 20 to 50 ([d2d47ea](https://github.com/reaandrew/acronymcreator/commit/d2d47eadfae26148b5b9ff77c744594f0774cf07))
+
 ## [1.6.0](https://github.com/reaandrew/acronymcreator/compare/v1.5.4...v1.6.0) (2025-10-06)
 
 ### Features
