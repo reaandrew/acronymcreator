@@ -145,3 +145,9 @@ jobs:
           - Use grep/glob for targeted searches only when needed
           - NO exploratory reading after fixing (e.g., lefthook.yml)
           - Focus on the specific failure, nothing else
+
+          CI ENVIRONMENT:
+          - NO venv activation needed - all tools installed globally
+          - pre-commit, black, flake8, ggshield, pytest already in PATH
+          - Do NOT run: source venv/bin/activate
+          - Do NOT run: pip install - dependencies already installed
