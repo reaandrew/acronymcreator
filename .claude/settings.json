@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(pip:*)",
+      "Bash(pytest:*)",
+      "Bash(pre-commit:*)",
+      "Bash(lefthook:*)"
+    ]
+  }
+}

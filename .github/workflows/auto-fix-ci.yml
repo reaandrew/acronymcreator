@@ -7,7 +7,7 @@ on:
       - completed
 
 concurrency:
-  group: auto-fix-${{ github.event.workflow_run.head_branch }}
+  group: auto-fix-${{ github.event.workflow_run.head_branch || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
   notify-claude:
     name: Notify Claude GitHub Agent
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' && (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.event == 'workflow_dispatch') }}
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request' }}
 
     steps:
     - name: Get PR details from workflow run
@@ -44,6 +44,18 @@ jobs:
         echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
         echo "Found PR #$PR_NUMBER on branch $PR_BRANCH"
 
+    - name: Skip if last commit is the trigger-only commit
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RUN_ID="${{ github.event.workflow_run.id }}"
+        HEAD_SHA=$(gh api /repos/${{ github.repository }}/actions/runs/$RUN_ID --jq .head_sha)
+        MSG=$(gh api /repos/${{ github.repository }}/commits/$HEAD_SHA --jq .commit.message)
+        if echo "$MSG" | grep -qi '^ci: trigger workflow after auto-fix'; then
+          echo "Latest commit is the CI trigger-only commit; skipping auto-fix to avoid loops."
+          exit 0
+        fi
+
     - name: Checkout PR branch
       uses: actions/checkout@v4
       with:
@@ -51,28 +63,38 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.AUTO_FIX_PAT }}
 
+    - name: Prepare runtimes for validator
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install black flake8 ggshield pyyaml pre-commit
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        cache: false
+
+    - name: Install lefthook
+      run: |
+        go install github.com/evilmartians/lefthook@latest
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+    - name: Configure git author for bot commits
+      run: |
+        git config user.name "claude-bot"
+        git config user.email "claude-bot@users.noreply.github.com"
+
     - name: Invoke Claude to fix CI failure
       id: claude-fix
       uses: anthropics/claude-code-action@v1
       with:
         anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
         github_token: ${{ secrets.AUTO_FIX_PAT }}
-        settings: |
-          {
-            "permissionMode": "acceptEdits",
-            "permissions": {
-              "allow": [
-                "Edit",
-                "Write",
-                "Read",
-                "Glob",
-                "Grep",
-                "Bash(git *)",
-                "Bash(pre-commit *)",
-                "Bash(pytest *)"
-              ]
-            }
-          }
+        claude_args: |
+          --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,WebFetch,WebSearch,Bash(*)"
+          --dangerously-skip-permissions
+          --max-turns 20
         prompt: |
           CI workflow failed for PR #${{ steps.get-pr.outputs.pr_number }}.
 
@@ -83,29 +105,22 @@ jobs:
 
           1. ANALYZE FAILURE
              - Read .claude/agents/ci-failure-analyzer.md
-             - Follow its instructions to analyze the CI failure
              - Identify root cause with confidence level
-             - Understand blast radius and error category
 
           2. FIX THE ISSUE
-             - Based on your analysis, fix the identified problem
              - Edit the problematic file(s)
-             - Apply the minimum necessary changes
+             - Minimum necessary changes
 
           3. VALIDATE FIXES
              - Read .claude/agents/precommit-validator.md
-             - Follow its instructions to validate your fixes
              - Run all pre-commit hooks
              - Auto-stage any files modified by hooks
-             - Ensure all hooks pass before proceeding
+             - Ensure all hooks pass
 
           4. COMMIT AND PUSH (only if validation passes)
-             - Generate conventional commit message using format:
-               "fix: <brief description of what was fixed>"
-             - Include Co-Authored-By: Claude <noreply@anthropic.com>
-             - Example: "fix: remove undefined variable causing NameError"
-             - Commit and push to ${{ steps.get-pr.outputs.pr_branch }}
-             - Note: The workflow will trigger CI automatically after you finish
+             - Conventional commit: "fix: <brief>"
+             - Co-Authored-By: Claude <noreply@anthropic.com>
+             - Push to ${{ steps.get-pr.outputs.pr_branch }}
 
           CRITICAL RULES:
           - Steps must be executed in order
