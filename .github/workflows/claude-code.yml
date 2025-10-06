@@ -8,33 +8,32 @@ on:
 
 permissions:
   contents: write
-  issues: write
   pull-requests: write
+  issues: write
 
 jobs:
   claude-code:
-    name: Claude Code Assistant
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude'))
-
+    env:
+      CLAUDE_BRANCH: claude/${{ github.run_id }}
+      CLAUDE_BASE: ${{ github.event.repository.default_branch }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Prepare PATH
-      run: |
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-        echo "$(go env GOPATH 2>/dev/null || echo $HOME/go)/bin" >> $GITHUB_PATH
-
-    - name: Claude Code Action Official
-      uses: anthropics/claude-code-action@v1
-      with:
-        anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-        github_token: ${{ secrets.AUTO_FIX_PAT }}
-        trigger_phrase: "@claude"
-        claude_args: |
-          --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,WebFetch,WebSearch,Bash(*)"
-          --max-turns 50
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.AUTO_FIX_PAT }}
+          trigger_phrase: "@claude"
+          prompt: |
+            Use branch "${{ env.CLAUDE_BRANCH }}" created from "${{ env.CLAUDE_BASE }}".
+            Implement the requested change, commit, push the branch,
+            and OPEN A PULL REQUEST back to "${{ env.CLAUDE_BASE }}" with a concise title/body.
+          claude_args: |
+            --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,Bash(*)"
+            --max-turns 50
