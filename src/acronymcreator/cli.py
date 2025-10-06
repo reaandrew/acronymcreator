@@ -3,6 +3,7 @@ Command line interface for AcronymCreator.
 """
 
 import json
+import yaml
 import click
 from .core import AcronymCreator, AcronymOptions
 
@@ -29,7 +30,7 @@ from .core import AcronymCreator, AcronymOptions
 )
 @click.option(
     "--format",
-    type=click.Choice(["text", "json"], case_sensitive=False),
+    type=click.Choice(["text", "json", "yaml"], case_sensitive=False),
     default="text",
     help="Output format (default: text)",
 )
@@ -73,6 +74,18 @@ def main(phrase, include_articles, min_length, max_words, lowercase, format):
             },
         }
         click.echo(json.dumps(output, indent=2))
+    elif format == "yaml":
+        output = {
+            "phrase": phrase,
+            "acronym": result,
+            "options": {
+                "include_articles": include_articles,
+                "min_word_length": min_length,
+                "max_words": max_words,
+                "lowercase": lowercase,
+            },
+        }
+        click.echo(yaml.dump(output, default_flow_style=False))
     else:
         click.echo(result)
 

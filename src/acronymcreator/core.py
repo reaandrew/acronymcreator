@@ -60,6 +60,8 @@ class AcronymCreator:
 
         if options.force_uppercase:
             acronym = acronym.upper()
+        else:
+            acronym = acronym.lower()
 
         return acronym
 
@@ -128,6 +130,8 @@ class AcronymCreator:
 
         if options.force_uppercase:
             acronym = acronym.upper()
+        else:
+            acronym = acronym.lower()
 
         return acronym
 
