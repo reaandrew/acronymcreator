@@ -1,3 +1,8 @@
+---
+name: Dependency Update Validator
+description: Safely update Python dependencies while ensuring all tests pass and CI guardrails remain intact. Use for monthly maintenance or after security advisories.
+---
+
 # Dependency Update Validator Agent
 
 ## Purpose

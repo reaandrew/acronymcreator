@@ -1,3 +1,8 @@
+---
+name: Agent Directory Documentation
+description: Documentation index for all Claude Code agents in this project. This is not an executable agent.
+---
+
 # Claude Code Agents
 
 This directory contains specialized Claude Code agents designed to improve the development workflow for this project. Each agent focuses on a specific task and follows the principle of **analyze first, act after approval** to respect project guardrails.

@@ -1,3 +1,8 @@
+---
+name: Test Coverage Guardian
+description: Ensure new code maintains 80% test coverage threshold. Use after adding new functions or when pre-commit hook fails on coverage.
+---
+
 # Test Coverage Guardian Agent
 
 ## Purpose

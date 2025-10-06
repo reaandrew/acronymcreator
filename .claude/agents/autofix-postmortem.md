@@ -1,3 +1,8 @@
+---
+name: Auto-fix Post-mortem
+description: Analyze auto-fix workflow effectiveness and identify improvement opportunities. Use for weekly/monthly reviews or after changes to auto-fix workflow.
+---
+
 # Auto-fix Post-mortem Agent
 
 ## Purpose

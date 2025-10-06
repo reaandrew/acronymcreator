@@ -1,3 +1,8 @@
+---
+name: Pre-commit Hook Validator
+description: Validate all changes against pre-commit hooks before pushing. Use PROACTIVELY before every git push to ensure all guardrails pass.
+---
+
 # Pre-commit Hook Validator Agent
 
 ## Purpose

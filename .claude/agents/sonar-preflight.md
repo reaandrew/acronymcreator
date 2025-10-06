@@ -1,3 +1,8 @@
+---
+name: SonarCloud Quality Gate Pre-flight
+description: Predict SonarCloud quality gate results before pushing to main branch. Use before merging PR to main or after SonarCloud fails in CI.
+---
+
 # SonarCloud Quality Gate Pre-flight Agent
 
 ## Purpose

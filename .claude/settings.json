@@ -15,5 +15,6 @@
       "Bash(pre-commit:*)",
       "Bash(lefthook:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": ["sonarqube"]
 }

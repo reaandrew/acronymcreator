@@ -1,3 +1,8 @@
+---
+name: Conventional Commit Formatter
+description: Generate properly formatted conventional commit messages for semantic-release. Use before every commit or when commit-msg hook rejects message.
+---
+
 # Conventional Commit Formatter Agent
 
 ## Purpose

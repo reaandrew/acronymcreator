@@ -1,3 +1,8 @@
+---
+name: CI Failure Analyzer
+description: Analyze CI failures without making changes. Use when CI pipeline fails and you need to understand root cause before attempting fixes.
+---
+
 # CI Failure Analyzer Agent
 
 ## Purpose

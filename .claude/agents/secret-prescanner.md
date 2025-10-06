@@ -1,3 +1,8 @@
+---
+name: GitGuardian Secret Pre-scanner
+description: Comprehensive secret detection before commits to prevent credentials from entering repository. Use before committing sensitive changes or configuration files.
+---
+
 # GitGuardian Secret Pre-scanner Agent
 
 ## Purpose

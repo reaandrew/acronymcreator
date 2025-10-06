@@ -1,3 +1,8 @@
+---
+name: Workflow Debugger
+description: Debug GitHub Actions workflow failures, permission issues, and configuration problems. Use when workflow fails or after updating workflow configuration.
+---
+
 # Workflow Debugger Agent
 
 ## Purpose

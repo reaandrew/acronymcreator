@@ -1,3 +1,8 @@
+---
+name: Release Notes Generator
+description: Generate comprehensive, user-friendly release notes from conventional commits. Use before creating GitHub release or after merging to main.
+---
+
 # Release Notes Generator Agent
 
 ## Purpose
