@@ -239,6 +239,47 @@ $ acronymcreator "The Quick Brown Fox" --include-articles --max-words 3 --lowerc
 }
 ```
 
+### YAML Output Format
+
+**Feature**: Use `--format yaml` to get human-readable structured output, ideal for configuration management and documentation
+
+```bash
+# Default text format
+$ acronymcreator "Hello World"
+HW
+
+# YAML format with metadata
+$ acronymcreator "Hello World" --format yaml
+acronym: HW
+options:
+  include_articles: false
+  lowercase: false
+  max_words: null
+  min_word_length: 2
+phrase: Hello World
+
+# YAML with all options
+$ acronymcreator "The Quick Brown Fox" --include-articles --max-words 3 --lowercase --format yaml
+acronym: tqb
+options:
+  include_articles: true
+  lowercase: true
+  max_words: 3
+  min_word_length: 2
+phrase: The Quick Brown Fox
+
+# Real-world use case: Generating configuration files
+$ acronymcreator "Database Management System" --format yaml > dbms-config.yaml
+$ cat dbms-config.yaml
+acronym: DMS
+options:
+  include_articles: false
+  lowercase: false
+  max_words: null
+  min_word_length: 2
+phrase: Database Management System
+```
+
 ### Combining Multiple Options
 
 **Feature**: All options can be combined for precise control over acronym generation
