@@ -131,7 +131,7 @@ class AcronymCreator:
 
         return acronym
 
-    def generate_multiple_options(self, phrase: str, count: int = 4) -> dict:
+    def generate_multiple_options(self, phrase: str) -> dict:
         """Generate multiple acronym options using different strategies."""
         if not phrase.strip():
             return {"basic": [], "with_articles": [], "creative": [], "syllable": []}

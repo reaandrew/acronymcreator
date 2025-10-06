@@ -108,10 +108,76 @@ class TestAcronymCreator:
         result = self.creator.create_syllable_acronym(phrase, options)
         assert result == "PYPRLAN"  # Py-Pr-Lan based on syllable logic
 
+    def test_create_syllable_acronym_empty(self):
+        """Test syllable acronym with empty phrase."""
+        phrase = ""
+        options = AcronymOptions()
+        result = self.creator.create_syllable_acronym(phrase, options)
+        assert result == ""
+
+    def test_create_syllable_acronym_max_words(self):
+        """Test syllable acronym with max_words limit."""
+        phrase = "One Two Three Four"
+        options = AcronymOptions(max_words=2)
+        result = self.creator.create_syllable_acronym(phrase, options)
+        assert result == "ONTW"
+
+    def test_create_syllable_acronym_short_words(self):
+        """Test syllable acronym with short words (<=2 chars)."""
+        phrase = "Go To It"
+        options = AcronymOptions(include_articles=True)
+        result = self.creator.create_syllable_acronym(phrase, options)
+        assert result == "GOTOIT"
+
+    def test_create_syllable_acronym_medium_words(self):
+        """Test syllable acronym with medium words (3-4 chars)."""
+        phrase = "Code Test"
+        options = AcronymOptions()
+        result = self.creator.create_syllable_acronym(phrase, options)
+        assert result == "COTE"
+
+    def test_create_syllable_acronym_vowel_start(self):
+        """Test syllable acronym with words starting with vowel."""
+        phrase = "Apple Orange"
+        options = AcronymOptions()
+        result = self.creator.create_syllable_acronym(phrase, options)
+        assert result == "APPORA"
+
+    def test_create_syllable_acronym_lowercase(self):
+        """Test syllable acronym with lowercase output."""
+        phrase = "Hello World"
+        options = AcronymOptions(force_uppercase=False)
+        result = self.creator.create_syllable_acronym(phrase, options)
+        assert result == "HelWor"
+
+    def test_generate_multiple_options_empty(self):
+        """Test generate_multiple_options with empty phrase."""
+        phrase = ""
+        results = self.creator.generate_multiple_options(phrase)
+        assert results == {
+            "basic": [],
+            "with_articles": [],
+            "creative": [],
+            "syllable": [],
+        }
+
+    def test_generate_multiple_options_creative_variations(self):
+        """Test that creative variations are generated correctly."""
+        phrase = "One Two Three Four Five"
+        results = self.creator.generate_multiple_options(phrase)
+        assert len(results["creative"]) > 0
+
+    def test_extract_words_empty(self):
+        """Test extract_words with empty phrase."""
+        phrase = ""
+        options = AcronymOptions()
+        words = self.creator.extract_words(phrase, options)
+        assert words == []
+
     def test_generate_multiple_options(self):
         """Test generation of multiple acronym options."""
         phrase = "The Quick Brown Fox"
-        results = self.creator.generate_multiple_options(phrase, count=2)
+        results = self.creator.generate_multiple_options(phrase)
 
         # Check that all expected keys are present
         assert "basic" in results
