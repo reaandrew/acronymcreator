@@ -4,291 +4,365 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-This repository demonstrates GitGuardian integration in CI/CD workflows to prevent secrets from entering codebases. It's designed as a template/example for teams implementing robust secret detection and automated release processes.
+This repository demonstrates GitGuardian integration in CI/CD workflows to prevent secrets from entering codebases. It's designed as a template/example for teams implementing robust secret detection and automated release processes. The functional component is a Python CLI acronym generator built with Click.
 
-### Documentation Files
+**Documentation Files**:
+- `/BLOG.md` - Main blog post about "Automated Guard Rails for Vibe Coding"
+- `/README.md` - Complete project documentation with architecture diagrams
 
-**Blog Content**: `/BLOG.md` - Main blog post about "Automated Guard Rails for Vibe Coding" that explains the project's security and automation concepts with practical examples.
+## Development Environment Setup
 
-## Development Commands
-
-### Local Environment Setup
 ```bash
-# Create and activate Python virtual environment
+# CRITICAL: This project uses BOTH lefthook AND pre-commit hooks
+# lefthook requires tools (black, flake8, pytest) available in PATH
+# pre-commit manages its own isolated environments
+
+# 1. Create and activate virtual environment (REQUIRED)
 python3 -m venv venv
 source venv/bin/activate
 
-# Install pre-commit
-pip install pre-commit
-
-# Install git hook scripts
-pre-commit install
-pre-commit install --hook-type commit-msg
-```
-
-### Testing and Validation
-```bash
-# ALWAYS activate virtual environment first
-source venv/bin/activate
-
-# Install project dependencies including dev tools
+# 2. Install project with ALL dev dependencies
 pip install -e ".[dev]"
 
-# Run all pre-commit hooks on all files
+# 3. Install pre-commit hook environments
+pre-commit install --install-hooks
+pre-commit install --hook-type commit-msg
+
+# 4. Verify setup - ALL hooks must pass
+export PATH="$(pwd)/venv/bin:$PATH"  # Ensure lefthook finds tools
 pre-commit run --all-files
+```
 
-# Test GitGuardian scanning specifically
-ggshield secret scan pre-commit
+**PATH Configuration**: Lefthook hooks (black, flake8, pytest) require tools in PATH. Always export the venv bin directory to PATH before git operations:
+```bash
+export PATH="/path/to/venv/bin:$PATH"
+```
 
-# Run conventional commit validation
-pre-commit run conventional-pre-commit --hook-stage commit-msg
+## Testing Commands
 
-# Run tests with coverage manually
+```bash
+# ALWAYS activate venv and set PATH first
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
+
+# Run tests with coverage (80% minimum required)
 python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 
-# Run only the coverage test hook
-pre-commit run pytest --all-files
-```
+# Run specific test file
+python -m pytest tests/test_acronym_creator.py -v
 
-## CRITICAL GIT WORKFLOW RULES
+# Run specific test function
+python -m pytest tests/test_acronym_creator.py::TestAcronymCreator::test_basic_acronym -v
 
-**⚠️ NEVER PUSH WHEN PRE-COMMIT CHECKS FAIL ⚠️**
-
-**MANDATORY PRE-COMMIT WORKFLOW:**
-1. **ALWAYS** run `git commit` and let pre-commit hooks execute
-2. **IF PRE-COMMIT HOOKS FAIL** - STOP IMMEDIATELY
-3. **FIX ALL ISSUES** identified by the hooks
-4. **CHECK `git status`** - if hooks modified files, add and commit them
-5. **ONLY PUSH** after ALL pre-commit checks pass successfully
-
-**Pre-commit Hook Auto-Fixes:**
-- Hooks may automatically fix formatting, trailing whitespace, etc.
-- After auto-fixes, check `git status` for modified files
-- Stage and commit any files modified by hooks
-- Re-run hooks to ensure they pass
-
-**Example Workflow:**
-```bash
-# Make changes
-git add .
-git commit -m "your message"  # Pre-commit hooks run here
-
-# IF HOOKS FAIL - DO NOT PUSH!
-# Fix issues, then check for auto-fixes:
-git status  # Check if hooks modified files
-git add .   # Stage any auto-fixes
-git commit -m "style: fix pre-commit hook issues"
-
-# ONLY push after hooks pass:
-git push
-```
-
-### Release Process
-- Releases are fully automated via semantic-release
-- Push to `main` branch triggers automatic versioning and GitHub release
-- No manual intervention required for releases
-
-## Architecture
-
-### Core Components
-
-**Security Pipeline**: Multi-layer validation
-1. **Local pre-commit**: GitGuardian ggshield scanning before commits (detects secrets in staged changes)
-2. **Test coverage enforcement**: Blocks commits with <80% code coverage
-3. **CI pre-commit job**: Re-runs all hooks including GitGuardian and tests
-4. **CI GitGuardian full scan**: Scans entire repository to catch commits that bypassed pre-commit (e.g., --no-verify)
-5. **Conventional commits**: Enforced format for automated versioning
-
-**CI/CD Workflow**: Five sequential jobs
-1. **lint-and-test**: Re-runs all pre-commit checks in clean environment + comprehensive testing
-2. **gitguardian-scan**: Full repository history scanning with ggshield (catches bypassed commits + historical secrets)
-3. **sonarcloud**: Code quality analysis with quality gate enforcement (main branch only)
-4. **build**: Package validation and artifact generation
-5. **release**: Automated semantic versioning and GitHub release (main branch only)
-
-**Automated Versioning**: Uses conventional commits to determine version bumps
-- `feat:` → minor version (0.1.0 → 0.2.0)
-- `fix:` → patch version (0.1.0 → 0.1.1)
-- `feat!:` or `BREAKING CHANGE:` → major version (0.1.0 → 1.0.0)
-
-### Key Configuration Files
-
-- `.pre-commit-config.yaml`: Defines all pre-commit hooks including GitGuardian and pytest
-- `pytest-precommit.ini`: Pytest configuration for test execution
-- `.coveragerc`: Coverage.py configuration with 80% threshold and temp file redirection
-- `pyproject.toml`: Main project configuration with dependencies and test settings
-- `.releaserc.json`: Semantic-release configuration for automated versioning
-- `.github/workflows/ci.yml`: Complete CI/CD pipeline definition
-- `sonar-project.properties`: SonarCloud analysis configuration
-
-## Environment Requirements
-
-**Required Environment Variables**:
-- `GITGUARDIAN_API_KEY`: For local GitGuardian scanning (get from GitGuardian Dashboard)
-- `GITGUARDIAN_API_KEY`: GitHub secret for CI/CD pipeline
-- `SONAR_TOKEN`: GitHub secret for SonarCloud integration
-
-**Python Environment**: Always activate the virtual environment (`source venv/bin/activate`) when working locally.
-
-## Test Coverage Enforcement
-
-This repository enforces a minimum 80% test coverage threshold at multiple levels:
-
-### Pre-commit Coverage Validation
-
-The pre-commit hook automatically runs tests with coverage and blocks commits that fall below 80%:
-
-```bash
-# Hook configuration uses:
-python -B -m pytest -c pytest-precommit.ini -p no:cacheprovider
-
-# Key features:
-- Uses pytest-precommit.ini for clean configuration
-- Generates no cache files (prevents "files modified" errors)
-- Stores coverage data in /tmp to avoid working tree modifications
-- Fails fast on insufficient coverage
-```
-
-### Coverage Configuration
-
-**.coveragerc**:
-- `data_file = /tmp/.coverage_precommit` (prevents repo file modifications)
-- `fail_under = 80` (enforces minimum coverage threshold)
-- `source = src` and `branch = true` for comprehensive coverage
-- Excludes common patterns (pragma: no cover, __repr__, etc.)
-
-**pytest-precommit.ini**:
-- `[pytest]` section header (required for .ini files)
-- `addopts = --cov=src --cov-report=term-missing --cov-fail-under=80`
-- Simplified since coverage.py reads configuration from .coveragerc
-
-**pyproject.toml**:
-- Main project dependencies and test settings
-- Alternative location for coverage config (uses `[tool.coverage.run]` section)
-
-### Testing Commands
-
-```bash
-# Run tests with coverage (local development)
-python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80
-
-# Test the pre-commit hook specifically
-pre-commit run pytest --all-files
+# View coverage HTML report
+python -m pytest --cov=src --cov-report=html
+open htmlcov/index.html
 
 # Run all pre-commit hooks (includes coverage check)
 pre-commit run --all-files
+
+# Run specific hook
+pre-commit run pytest --all-files
+pre-commit run black --all-files
 ```
 
-### Coverage Troubleshooting
+## CRITICAL Git Workflow Rules
+
+**⚠️ NEVER BYPASS PRE-COMMIT HOOKS ⚠️**
+
+This project has BOTH lefthook and pre-commit hooks that MUST pass before pushing:
+
+### Mandatory Pre-commit Workflow
+
+1. **ALWAYS** ensure venv is activated and in PATH before committing
+2. **NEVER** use `git commit --no-verify` - this bypasses critical security and quality checks
+3. **IF HOOKS FAIL** - STOP IMMEDIATELY and fix all issues
+4. **CHECK `git status`** - hooks may auto-fix files (black formatting, trailing whitespace)
+5. **STAGE AUTO-FIXES** - `git add .` any files modified by hooks
+6. **ONLY PUSH** after ALL checks pass
+
+### Correct Workflow Example
+
+```bash
+# Set up environment
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
+
+# Make changes and commit
+git add .
+git commit -m "feat: add new feature"  # Hooks run automatically
+
+# If hooks modify files (e.g., black formatting):
+git status  # Check for modified files
+git add .   # Stage auto-fixes
+git commit --amend --no-edit  # Include fixes in commit
+
+# Verify all hooks pass before pushing
+pre-commit run --all-files
+git push
+```
+
+### Hook Failure Recovery
+
+**Tools Not Found (flake8, black, pytest)**:
+```bash
+# Ensure venv is activated and in PATH
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
+
+# Verify tools are installed
+which black flake8 pytest
+
+# If missing, reinstall dev dependencies
+pip install -e ".[dev]"
+```
+
+**Coverage Below 80%**:
+```bash
+# Generate detailed coverage report
+python -m pytest --cov=src --cov-report=term-missing
+
+# Add tests for uncovered lines
+# Re-run until coverage ≥ 80%
+```
+
+## Architecture Overview
+
+### Dual Hook System
+
+This project uses **both lefthook and pre-commit**:
+
+**Lefthook** (`lefthook.yml`):
+- Fast, parallel hook execution
+- Runs black, flake8, pytest, gitguardian, yaml-check
+- Requires tools in PATH (venv/bin)
+- Used by default when installed
+
+**Pre-commit** (`.pre-commit-config.yaml`):
+- Manages isolated hook environments
+- Same hooks as lefthook but in isolated environments
+- Fallback if lefthook not available
+
+Both systems run the same checks - either must pass for commits to succeed.
+
+### CI/CD Pipeline (5 Sequential Stages)
+
+1. **lint-and-test**: Re-runs all pre-commit checks in clean environment
+   - Validates hooks weren't bypassed with `--no-verify`
+   - Generates coverage artifacts for SonarCloud
+   - Ensures reproducible builds
+
+2. **gitguardian-scan**: Full repository history scan
+   - Scans **entire git history** with `ggshield secret scan repo .`
+   - Catches secrets in deleted files or old commits
+   - Slower than pre-commit scan but comprehensive
+
+3. **sonarcloud**: Code quality gate (main branch only)
+   - Requires ≥80% coverage, <3% duplication
+   - Security hotspots must be reviewed
+   - Blocks merge if quality gate fails
+
+4. **semgrep**: Security analysis
+   - Static analysis for security vulnerabilities
+   - Runs in parallel with sonarcloud
+
+5. **build**: Package validation
+   - Verifies package builds correctly
+   - Generates distribution artifacts
+
+6. **release**: Automated versioning (main branch only)
+   - Analyzes conventional commits
+   - Creates GitHub releases with changelogs
+
+### Test Coverage Enforcement (80% Minimum)
+
+Coverage enforced at **three levels**:
+
+1. **Pre-commit hook**: Blocks commits <80% coverage
+2. **CI pipeline**: Re-validates coverage in clean environment
+3. **SonarCloud**: Quality gate requires ≥80% coverage
+
+**Configuration**:
+- `.coveragerc`: Main config with `data_file = /tmp/.coverage_precommit` (prevents repo modifications)
+- `pytest-precommit.ini`: Pytest config for pre-commit hook
+- `pyproject.toml`: Package-level coverage settings
+
+### Secret Detection (Two-Layer)
+
+**Layer 1 - Pre-commit** (`ggshield secret scan pre-commit`):
+- Scans **staged changes only**
+- Fast feedback before commit
+- Blocks commit if secrets found
+
+**Layer 2 - CI Full Scan** (`ggshield secret scan repo .`):
+- Scans **entire repository history**
+- Catches bypassed commits (`--no-verify`)
+- Detects secrets in deleted files or old commits
+
+## Environment Variables
+
+**Local Development**:
+```bash
+export GITGUARDIAN_API_KEY=your_api_key_here  # Required for ggshield
+export PATH="$(pwd)/venv/bin:$PATH"           # Required for lefthook
+```
+
+**CI/CD (GitHub Secrets)**:
+- `GITGUARDIAN_API_KEY`: GitGuardian API for secret scanning
+- `SONAR_TOKEN`: SonarCloud integration
+- `SEMGREP_APP_TOKEN`: Semgrep security analysis
+
+## SonarCloud MCP Integration
+
+This project has SonarQube MCP server enabled (`.claude/settings.json`). Available MCP tools:
+
+```bash
+# Get quality gate status
+Show me the quality gate status for this project
+
+# Search for issues
+Give me a table of issues by severity
+
+# View specific issues
+Show details for issue <issue-key>
+
+# Change issue status
+Mark issue <issue-key> as false positive
+```
+
+**Common SonarCloud Issues**:
+- **Security hotspots not reviewed**: Review in SonarCloud UI, cannot be auto-fixed
+- **Coverage below 80%**: Add tests to increase coverage
+- **Code smells**: Refactor code per SonarCloud recommendations
+
+## Conventional Commits (Enforced)
+
+Commit format enforced by hooks (commit-msg stage):
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types**:
+- `feat:` → Minor version bump (0.1.0 → 0.2.0)
+- `fix:` → Patch version bump (0.1.0 → 0.1.1)
+- `feat!:` or `BREAKING CHANGE:` → Major version bump (0.1.0 → 1.0.0)
+- `docs:`, `style:`, `refactor:`, `test:`, `build:`, `ci:`, `chore:`, `revert:` → No release
+
+**Examples**:
+```bash
+git commit -m "feat: add syllable-based acronym generation"
+git commit -m "fix: resolve unused parameter warning in core.py"
+git commit -m "feat!: change CLI argument structure
+
+BREAKING CHANGE: --include-articles flag now requires explicit boolean value"
+```
+
+## Claude Code Agents
+
+Specialized agents in `.claude/agents/` for common tasks:
+
+- **pre-push-validator**: MANDATORY validation before git push (use proactively)
+- **precommit-validator**: Validates all pre-commit hooks pass
+- **secret-prescanner**: GitGuardian secret detection before commits
+- **coverage-guardian**: Ensures 80% test coverage
+- **sonar-preflight**: Predicts SonarCloud quality gate results
+- **commit-formatter**: Generates conventional commit messages
+- **ci-failure-analyzer**: Analyzes CI failures without making changes
+- **workflow-debugger**: Debugs GitHub Actions issues
+- **release-notes**: Generates release notes from commits
+
+## Key Configuration Files
+
+| File | Purpose | Critical Settings |
+|------|---------|------------------|
+| `lefthook.yml` | Primary git hooks (requires tools in PATH) | black, flake8, pytest, gitguardian |
+| `.pre-commit-config.yaml` | Alternative hooks with isolated environments | Same as lefthook but managed |
+| `.coveragerc` | Coverage config | `fail_under = 80`, `data_file = /tmp/...` |
+| `pytest-precommit.ini` | Pytest config for hooks | Coverage settings, test paths |
+| `pyproject.toml` | Python package config | Dependencies, entry points, pytest/coverage |
+| `.github/workflows/ci.yml` | CI/CD pipeline | 5-stage pipeline definition |
+| `sonar-project.properties` | SonarCloud config | Quality gate, coverage paths |
+| `.releaserc.json` | Semantic-release config | Versioning rules, changelog |
+
+## Troubleshooting
+
+### "flake8: not found" or "black: not found"
+
+**Cause**: Lefthook can't find tools because venv not in PATH
+
+**Fix**:
+```bash
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
+git commit ...
+```
+
+### Pre-commit Hooks Pass but Still Get Errors
+
+**Cause**: Lefthook runs first and may fail even if pre-commit would pass
+
+**Fix**: Ensure both hook systems can find tools:
+```bash
+# Install pre-commit environments
+pre-commit install --install-hooks
+
+# Ensure venv tools in PATH for lefthook
+export PATH="$(pwd)/venv/bin:$PATH"
+```
+
+### Coverage Failures in CI but Passes Locally
+
+**Cause**: Different coverage configurations or missing test files
+
+**Fix**:
+```bash
+# Use exact CI command locally
+python -B -m pytest -c pytest-precommit.ini -p no:cacheprovider
+
+# Check for .gitignore'd test files
+git status --ignored
+```
+
+### GitGuardian Scan Taking Too Long in CI
+
+**Cause**: Full history scan (`ggshield secret scan repo .`) scans all commits
+
+**Expected**: 1-3 minutes for typical repositories. This is comprehensive security and cannot be skipped.
+
+### SonarCloud Quality Gate Fails
+
+**Check CI Logs**: "Check Quality Gate Status" step shows detailed failures
 
 **Common Issues**:
-- **Low coverage**: Add tests for uncovered code paths
-- **"Files modified" error**: Coverage.py only reads config from .coveragerc, setup.cfg, or pyproject.toml
-- **CI vs local differences**: Ensure .coveragerc data_file redirects to /tmp to avoid repo modifications
-
-**Coverage Requirements**:
-- Minimum 80% total coverage required for commits
-- Branch coverage enabled for comprehensive testing
-- Both local pre-commit and CI enforce the same threshold
-
-## SonarCloud Quality Gate Troubleshooting
-
-When the SonarCloud stage fails, the CI pipeline includes a detailed quality gate status check that shows:
-
-### Checking Quality Gate Failures
-
-The CI workflow automatically polls the SonarCloud API and displays detailed failure information:
-
 ```bash
-# Example output when quality gate fails:
-Quality Gate Status: ERROR
-Quality Gate failed for the following reasons:
-- coverage: 45.2 is less than 80
-- duplicated_lines_density: 15.3 is greater than 3
-- code_smells: 12 is greater than 0
+# Security hotspots not reviewed (cannot auto-fix)
+# → Review in SonarCloud UI
+
+# Coverage below 80%
+python -m pytest --cov=src --cov-report=term-missing
+# → Add tests
+
+# Code smells
+# → Refactor per SonarCloud recommendations
 ```
 
-### Common Quality Gate Conditions
+## Release Process
 
-**Coverage Requirements**:
-- New code coverage must be ≥ 80%
-- Overall coverage should meet project standards
+Fully automated - no manual intervention required:
 
-**Code Quality Metrics**:
-- Duplicated lines density should be < 3%
-- Code smells should be minimized
-- Security hotspots must be reviewed
-- Maintainability rating should be A
+1. Merge to `main` triggers semantic-release
+2. Analyzes commits since last release
+3. Calculates version from commit types
+4. Generates changelog
+5. Creates GitHub release with git tag
 
-**Debugging SonarCloud Issues**:
-1. **Check CI logs**: Look for the "Check Quality Gate Status" step output
-2. **Review metrics**: Each failed condition shows actual vs expected values
-3. **Fix systematically**: Address each condition individually
-4. **Re-run analysis**: Push changes to trigger new SonarCloud scan
-
-### Manual SonarCloud API Check
-
-If needed, you can manually check quality gate status:
-
+**Manual Release Trigger** (if needed):
 ```bash
-# Get project status
-curl -s -u "$SONAR_TOKEN:" \
-  "https://sonarcloud.io/api/qualitygates/project_status?projectKey=reaandrew_acronymcreator"
+# Trigger release workflow manually
+gh workflow run release
 ```
-
-## GitGuardian Secret Detection
-
-This repository implements comprehensive secret detection at multiple levels to prevent credentials from entering the codebase.
-
-### Pre-commit Secret Scanning
-
-**Local Protection**: GitGuardian ggshield runs on every commit attempt
-- Scans **staged changes only** (files being committed)
-- Detects API keys, tokens, passwords, certificates, and other secrets
-- Blocks commit if secrets are found
-- Part of the pre-commit hook chain that also includes linting and tests
-
-### CI Full Repository Scanning
-
-**Comprehensive Protection**: Dedicated GitGuardian stage in CI pipeline
-- Scans **entire repository** using `ggshield secret scan path . --recursive`
-- Catches commits that bypassed pre-commit hooks (e.g., using `--no-verify`)
-- Runs on all branches and pull requests for comprehensive coverage
-- Excludes `.git/**` directory to avoid false positives from temporary CI credentials
-
-### Two-Layer Security Model
-
-1. **Prevention**: Pre-commit hooks stop secrets at commit time
-2. **Detection**: CI scanning catches any secrets that slip through
-
-This dual approach ensures secrets cannot enter the repository through normal development workflows or emergency bypasses.
-
-### GitGuardian Configuration
-
-**Pre-commit Hook**:
-```yaml
-- repo: https://github.com/gitguardian/ggshield
-  hooks:
-    - id: ggshield
-      name: GitGuardian Shield
-```
-
-**CI Stage**:
-```yaml
-gitguardian-scan:
-  name: GitGuardian Repository History Scan
-  steps:
-    - name: Install ggshield
-      run: pip install ggshield
-    - name: GitGuardian scan repository history
-      run: ggshield secret scan repo .
-```
-
-## Commit Conventions
-
-This repository enforces conventional commit format via pre-commit hooks:
-- `feat:` `fix:` `docs:` `style:` `refactor:` `test:` `build:` `ci:` `chore:` `revert:`
-
-Commits that don't follow this format will be rejected by the commit-msg hook.
-
-Commit messages must only contain content which is relevant to the changes made

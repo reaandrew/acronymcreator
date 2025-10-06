@@ -2,15 +2,351 @@
 
 A robust Python CLI tool demonstrating comprehensive CI/CD best practices, security controls, and automated quality gates.
 
+[![CI](https://github.com/reaandrew/acronymcreator/actions/workflows/ci.yml/badge.svg)](https://github.com/reaandrew/acronymcreator/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/reaandrew/acronymcreator)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A-brightgreen)](https://sonarcloud.io/dashboard?id=reaandrew_acronymcreator)
+
 ## Purpose
 
-This repository serves as a template/example for teams implementing secure development workflows with:
-- **Multi-layer secret detection** using GitGuardian
-- **Automated test coverage enforcement** (80% minimum threshold)
-- **Code quality analysis** with SonarCloud integration
-- **Automated semantic versioning** and release management
+This repository serves dual purposes:
 
-The project includes a functional acronym generation CLI built with Click and comprehensive test coverage.
+1. **Security & CI/CD Template**: Demonstrates enterprise-grade development workflows with multi-layer secret detection, automated testing, and quality gates
+2. **Functional CLI Tool**: A feature-rich acronym generator built with Python Click framework
+
+Perfect for teams implementing secure development practices or developers learning robust CI/CD patterns.
+
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [CLI Usage & Examples](#cli-usage--examples)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Development](#development)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+---
+
+## Quick Start
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/reaandrew/acronymcreator.git
+cd acronymcreator
+
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Set up pre-commit hooks
+pre-commit install --install-hooks
+pre-commit install --hook-type commit-msg
+```
+
+### Basic Usage
+
+```bash
+# Generate a simple acronym
+acronymcreator "Hello World"
+# Output: HW
+
+# Get help
+acronymcreator --help
+
+# Check version
+acronymcreator --version
+```
+
+---
+
+## CLI Usage & Examples
+
+The `acronymcreator` command provides flexible acronym generation with multiple options and output formats.
+
+### Basic Acronym Generation
+
+**Feature**: Generate acronyms by taking the first letter of each significant word (articles and common words excluded by default)
+
+```bash
+# Simple phrase
+$ acronymcreator "Hello World"
+HW
+
+# Technical terms
+$ acronymcreator "Application Programming Interface"
+API
+
+# Excludes articles automatically
+$ acronymcreator "The Quick Brown Fox"
+QBF
+
+# Multiple word phrase
+$ acronymcreator "Portable Document Format"
+PDF
+
+# With special characters (automatically cleaned)
+$ acronymcreator "Really Simple Syndication!"
+RSS
+```
+
+### Including Articles and Common Words
+
+**Feature**: Use `--include-articles` to include articles (a, an, the) and common words (and, or, but, in, on, at, to, for, of, with, by, from, etc.) in the acronym
+
+```bash
+# Default behavior (excludes articles)
+$ acronymcreator "The Quick Brown Fox"
+QBF
+
+# Include articles
+$ acronymcreator "The Quick Brown Fox" --include-articles
+TQBF
+
+# Real-world example
+$ acronymcreator "Frequently Asked Questions"
+FAQ
+
+$ acronymcreator "Frequently Asked Questions" --include-articles
+FAQ
+# (No difference - no articles in phrase)
+
+# With prepositions
+$ acronymcreator "Point of Sale"
+PS
+
+$ acronymcreator "Point of Sale" --include-articles
+POS
+```
+
+### Lowercase Output
+
+**Feature**: Use `--lowercase` to generate lowercase acronyms instead of the default uppercase
+
+```bash
+# Default uppercase
+$ acronymcreator "Hello World"
+HW
+
+# Lowercase output
+$ acronymcreator "Hello World" --lowercase
+hw
+
+# Useful for programming identifiers
+$ acronymcreator "User Interface Component" --lowercase
+uic
+
+# Combined with other options
+$ acronymcreator "The Quick Brown Fox" --include-articles --lowercase
+tqbf
+```
+
+### Limiting Number of Words
+
+**Feature**: Use `--max-words N` to limit the acronym to the first N words, useful for long phrases
+
+```bash
+# Long phrase, all words
+$ acronymcreator "One Two Three Four Five Six"
+OTTTFS
+
+# Limit to first 3 words
+$ acronymcreator "One Two Three Four Five Six" --max-words 3
+OTT
+
+# Real-world example
+$ acronymcreator "North Atlantic Treaty Organization" --max-words 4
+NATO
+
+# Combined with articles
+$ acronymcreator "The United States of America" --max-words 3
+US
+# (Only processes "The United States", excludes "The")
+
+$ acronymcreator "The United States of America" --max-words 3 --include-articles
+TUS
+```
+
+### Minimum Word Length Filter
+
+**Feature**: Use `--min-length N` to exclude words shorter than N characters (default is 2)
+
+```bash
+# Default (min-length 2)
+$ acronymcreator "A Big Red Car"
+BRC
+
+# Increase minimum to 3 characters
+$ acronymcreator "A Big Red Car" --min-length 3
+BRC
+# (Same result - 'A' already excluded)
+
+# With articles included
+$ acronymcreator "A Big Red Car" --include-articles
+ABRC
+
+$ acronymcreator "A Big Red Car" --include-articles --min-length 3
+BRC
+# ('A' excluded due to length)
+
+# Practical example
+$ acronymcreator "To Be Or Not To Be" --include-articles --min-length 3
+Not
+# (Only 'Not' is 3+ characters)
+```
+
+### JSON Output Format
+
+**Feature**: Use `--format json` to get structured output with metadata, perfect for scripting and integrations
+
+```bash
+# Default text format
+$ acronymcreator "Hello World"
+HW
+
+# JSON format with metadata
+$ acronymcreator "Hello World" --format json
+{
+  "phrase": "Hello World",
+  "acronym": "HW",
+  "options": {
+    "include_articles": false,
+    "min_word_length": 2,
+    "max_words": null,
+    "lowercase": false
+  }
+}
+
+# JSON with all options
+$ acronymcreator "The Quick Brown Fox" --include-articles --max-words 3 --lowercase --format json
+{
+  "phrase": "The Quick Brown Fox",
+  "acronym": "tqb",
+  "options": {
+    "include_articles": true,
+    "min_word_length": 2,
+    "max_words": 3,
+    "lowercase": true
+  }
+}
+```
+
+### Combining Multiple Options
+
+**Feature**: All options can be combined for precise control over acronym generation
+
+```bash
+# Lowercase acronym from first 4 words, including articles
+$ acronymcreator "The Lord of the Rings" --include-articles --max-words 4 --lowercase
+tlot
+
+# Filter short words, limit to 3 words
+$ acronymcreator "A Very Long Description Of Something" --min-length 4 --max-words 3
+VLD
+
+# JSON output with custom filtering
+$ acronymcreator "International Business Machines" --max-words 3 --lowercase --format json
+{
+  "phrase": "International Business Machines",
+  "acronym": "ibm",
+  "options": {
+    "include_articles": false,
+    "min_word_length": 2,
+    "max_words": 3,
+    "lowercase": true
+  }
+}
+```
+
+### Real-World Examples
+
+```bash
+# Technology acronyms
+$ acronymcreator "Hypertext Markup Language"
+HTML
+
+$ acronymcreator "Cascading Style Sheets"
+CSS
+
+$ acronymcreator "JavaScript Object Notation"
+JSON
+
+$ acronymcreator "Structured Query Language"
+SQL
+
+# Organizations
+$ acronymcreator "National Aeronautics and Space Administration"
+NASA
+
+$ acronymcreator "North Atlantic Treaty Organization"
+NATO
+
+# Business terms
+$ acronymcreator "Chief Executive Officer"
+CEO
+
+$ acronymcreator "Return on Investment"
+ROI
+
+$ acronymcreator "Key Performance Indicator"
+KPI
+
+# Create lowercase variable names
+$ acronymcreator "User Interface Controller" --lowercase
+uic
+
+$ acronymcreator "Database Connection Pool" --lowercase
+dcp
+```
+
+### Error Handling
+
+```bash
+# Empty phrase (no valid words after filtering)
+$ acronymcreator "a an the" --min-length 10
+Error: No acronym could be generated from the given phrase.
+
+# Special characters only
+$ acronymcreator "!@#$%"
+Error: No acronym could be generated from the given phrase.
+```
+
+### Shell Scripting Examples
+
+```bash
+# Store acronym in variable
+ACRONYM=$(acronymcreator "Application Programming Interface")
+echo "The acronym is: $ACRONYM"
+# Output: The acronym is: API
+
+# Process multiple phrases
+for phrase in "Hello World" "Foo Bar Baz" "Quick Brown Fox"; do
+  echo "$phrase -> $(acronymcreator "$phrase")"
+done
+# Output:
+# Hello World -> HW
+# Foo Bar Baz -> FBB
+# Quick Brown Fox -> QBF
+
+# JSON parsing with jq
+acronymcreator "Hello World" --format json | jq -r '.acronym'
+# Output: HW
+
+# Conditional processing
+if acronymcreator "Test Phrase" --lowercase | grep -q "tp"; then
+  echo "Acronym contains 'tp'"
+fi
+```
+
+---
 
 ## Features
 
@@ -26,347 +362,548 @@ The project includes a functional acronym generation CLI built with Click and co
 - **Flake8 Linting**: PEP 8 compliance and code quality checks
 - **Test Coverage**: 80% minimum threshold enforced at commit and CI
 - **SonarCloud Analysis**: Code quality, security, and technical debt assessment
+- **Semgrep Security**: Static analysis for security vulnerabilities
 
 #### Commit Standards
 - **Conventional Commits**: Enforced format for automated versioning
 - **Pre-commit Validation**: All quality checks run before commit acceptance
 - **CI Re-validation**: Clean environment re-runs of all quality checks
 
-### 🚀 Five-Stage CI/CD Pipeline
-1. **Lint and Test**: Pre-commit hooks + comprehensive testing
-2. **GitGuardian History Scan**: Full repository secret detection
-3. **SonarCloud**: Code quality analysis (main branch only)
-4. **Build**: Package validation and artifact generation
-5. **Release**: Automated semantic versioning (main branch only)
+### 🚀 Six-Stage CI/CD Pipeline
 
-### 🧪 Python Package
-- **Click CLI Framework**: Professional command-line interface
-- **Comprehensive Testing**: Unit tests with pytest and coverage reporting
-- **Package Structure**: Standard Python package with entry points
-- **Development Tools**: Pre-commit hooks, linting, and type checking
+1. **Lint and Test**: Pre-commit hooks + comprehensive testing with coverage reports
+2. **GitGuardian History Scan**: Full repository secret detection across all commits
+3. **SonarCloud**: Code quality analysis with quality gate enforcement (main branch only)
+4. **Semgrep**: Security vulnerability static analysis (parallel with SonarCloud)
+5. **Build**: Package validation and artifact generation
+6. **Release**: Automated semantic versioning and GitHub releases (main branch only)
 
-## Quick Start
+### 🧪 Professional Python Package
 
-### 1. Local Development Setup
+- **Click CLI Framework**: Professional command-line interface with rich options
+- **Comprehensive Testing**: Unit tests with pytest and 97% coverage
+- **Package Structure**: Standard Python package with proper entry points
+- **Development Tools**: Pre-commit hooks, linting, and automated formatting
 
-```bash
-# Create and activate Python virtual environment
-python3 -m venv venv
-source venv/bin/activate
+---
 
-# Install the package with development dependencies
-pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
-pre-commit install --hook-type commit-msg
-
-# Test the CLI
-acronymcreator "Hello World"  # Output: HW
-```
-
-### 2. Running Tests
-
-```bash
-# ALWAYS activate virtual environment first
-source venv/bin/activate
-
-# Run tests with coverage (must maintain 80% minimum)
-python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80
-
-# Run all pre-commit hooks (includes coverage check)
-pre-commit run --all-files
-
-# Test only the coverage hook
-pre-commit run pytest --all-files
-```
-
-### 3. Development Workflow
-
-```bash
-# Make your changes
-git add .
-
-# Commit with conventional format (triggers all quality checks)
-git commit -m "feat: add new acronym generation feature"
-
-# Push to trigger CI pipeline
-git push
-```
-
-The pre-commit hooks will automatically:
-- ✅ Run tests with coverage enforcement (80% minimum)
-- ✅ Scan for secrets with GitGuardian
-- ✅ Validate conventional commit format
-- ✅ Fix formatting and lint issues
-- ❌ Block the commit if any check fails
-
-## Architecture Overview
+## Architecture
 
 ### Multi-Layer Security Pipeline
 
-```mermaid
-graph LR
-    A[Developer Commit] --> B[Pre-commit Hooks]
-    B --> C[GitGuardian Scan]
-    B --> D[Test Coverage Check]
-    B --> E[Conventional Commit Check]
-    B --> F[Code Formatting]
-    F --> G[CI Pipeline]
-    G --> H[SonarCloud Analysis]
-    H --> I[Automated Release]
+```
+Developer Commit
+    ↓
+┌─────────────────────────┐
+│   Pre-commit Hooks      │
+│  ─────────────────────  │
+│  • GitGuardian Scan     │
+│  • Test Coverage (80%)  │
+│  • Conventional Commits │
+│  • Black Formatting     │
+│  • Flake8 Linting       │
+└─────────────────────────┘
+    ↓
+┌─────────────────────────┐
+│    CI Pipeline          │
+│  ─────────────────────  │
+│  1. Lint & Test         │
+│  2. GitGuardian (full)  │
+│  3. SonarCloud          │
+│  4. Semgrep             │
+│  5. Build               │
+│  6. Release             │
+└─────────────────────────┘
+    ↓
+┌─────────────────────────┐
+│   Quality Gates         │
+│  ─────────────────────  │
+│  • Coverage ≥ 80%       │
+│  • No Secrets           │
+│  • No Security Issues   │
+│  • Code Quality: A      │
+└─────────────────────────┘
+    ↓
+Automated Release
 ```
 
-**Layer 1 - Local Pre-commit**:
-- GitGuardian secret scanning
-- Test coverage enforcement (80% minimum)
-- Conventional commit validation
-- Code formatting and linting
+### Project Structure
 
-**Layer 2 - CI Pipeline**:
-- Re-runs all pre-commit checks in clean environment
-- Generates coverage reports for SonarCloud
-- Validates build and package integrity
+```
+acronymcreator/
+├── src/acronymcreator/          # Source code
+│   ├── __init__.py              # Package initialization
+│   ├── cli.py                   # Click CLI interface
+│   └── core.py                  # Core acronym logic
+├── tests/                       # Test suite
+│   ├── test_acronym_creator.py  # Core logic tests
+│   └── test_cli.py              # CLI tests
+├── .github/workflows/           # CI/CD pipelines
+│   ├── ci.yml                   # Main CI pipeline (6 stages)
+│   └── auto-fix-ci.yml          # Auto-fix workflow
+├── .claude/agents/              # Claude Code specialized agents
+├── .pre-commit-config.yaml      # Pre-commit hook definitions
+├── lefthook.yml                 # Alternative hook manager
+├── pyproject.toml               # Package configuration
+├── .coveragerc                  # Coverage settings
+├── pytest-precommit.ini         # Pytest configuration
+├── sonar-project.properties     # SonarCloud configuration
+└── .releaserc.json              # Semantic-release config
+```
 
-**Layer 3 - SonarCloud Quality Gate**:
-- Code quality analysis
-- Security vulnerability detection
-- Coverage verification
-- Technical debt assessment
+---
 
-**Layer 4 - Automated Release**:
-- Semantic version calculation
-- Changelog generation
-- GitHub release creation
-- Package publishing (when configured)
+## Development
 
-## Configuration Files
+### Setting Up Development Environment
 
-### Key Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `.pre-commit-config.yaml` | Pre-commit hooks including GitGuardian and pytest |
-| `pytest-precommit.ini` | Pytest configuration for test execution |
-| `.coveragerc` | Coverage.py configuration with 80% threshold |
-| `pyproject.toml` | Python package configuration and dependencies |
-| `.github/workflows/ci.yml` | Complete CI/CD pipeline definition |
-| `.releaserc.json` | Semantic-release configuration |
-| `sonar-project.properties` | SonarCloud analysis configuration |
-
-### Environment Variables
-
-**Local Development**:
 ```bash
-# Required for GitGuardian secret scanning
+# 1. Clone repository
+git clone https://github.com/reaandrew/acronymcreator.git
+cd acronymcreator
+
+# 2. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Install with dev dependencies
+pip install -e ".[dev]"
+
+# 4. Install pre-commit hooks
+pre-commit install --install-hooks
+pre-commit install --hook-type commit-msg
+
+# 5. Set environment variables
 export GITGUARDIAN_API_KEY=your_api_key_here
+export PATH="$(pwd)/venv/bin:$PATH"
+
+# 6. Verify setup
+pre-commit run --all-files
 ```
 
-> **Note**: GitGuardian CLI (`ggshield`) is included in the `dev` dependencies. For additional configuration options, see the [GitGuardian ggshield documentation](https://docs.gitguardian.com/ggshield-docs/configuration).
+### Running Tests
 
-**CI/CD Secrets** (configured in GitHub repository settings):
-- `GITGUARDIAN_API_KEY`: GitGuardian API key for CI pipeline
-- `SONAR_TOKEN`: SonarCloud integration token
-
-## Automated Guardrails & Quality Controls
-
-This repository implements comprehensive automated guardrails to ensure code quality, security, and reliability at every stage of development.
-
-### Pre-commit Checks (Local Protection)
-
-Every commit attempt triggers automated validation checks that **block the commit** if standards are not met:
-
-#### Security Scanning
-- **GitGuardian Secret Detection**: Scans staged changes for API keys, tokens, passwords, and certificates
-- **Immediate Feedback**: Developers know about security issues before code enters the repository
-
-#### Code Quality
-- **Black Code Formatting**: Automatically formats Python code to consistent style
-- **Flake8 Linting**: Enforces PEP 8 compliance and detects code quality issues
-- **Test Coverage**: Ensures 80% minimum coverage before allowing commits
-- **File Hygiene**: Removes trailing whitespace, ensures proper file endings
-
-#### Commit Standards
-- **Conventional Commits**: Validates commit message format for automated versioning
-- **YAML Validation**: Checks configuration files for syntax errors
-
-### CI Pipeline Re-validation (Clean Environment)
-
-The **"Lint and Test"** CI stage re-runs all pre-commit checks in a clean environment, providing additional value:
-
-#### Why Re-run Pre-commit Checks in CI?
-1. **Environment Consistency**: Validates that code works in clean, reproducible environment
-2. **Bypass Protection**: Catches issues when developers use `git commit --no-verify`
-3. **Dependency Verification**: Ensures all dependencies are properly declared
-4. **Cross-platform Validation**: Tests on different OS/Python versions than developer machines
-5. **Audit Trail**: Provides official record of quality compliance for compliance/governance
-
-#### CI-Specific Benefits
-- **Artifact Generation**: Creates coverage reports for downstream analysis
-- **Parallel Execution**: Runs tests faster with CI resources
-- **Integration Testing**: Validates package installation and CLI functionality
-- **Documentation**: Maintains build logs and test reports
-
-### GitGuardian Repository History Scanning
-
-Beyond pre-commit secret detection, the CI pipeline includes comprehensive repository scanning:
-
-#### Full History Analysis
-- **Complete Git History**: Scans every commit, branch, and file in repository history
-- **Historical Secrets**: Detects secrets that were committed and later removed
-- **Commit-by-Commit**: Identifies exactly which commits contain secrets
-
-#### Why Scan History vs. Just Files?
-1. **Complete Coverage**: Files can be deleted but secrets remain in git history
-2. **Compliance Requirements**: Many security standards require historical analysis
-3. **Incident Response**: Helps identify when secrets were introduced and their scope
-4. **Supply Chain Security**: Ensures no secrets exist anywhere in the codebase lifecycle
-
-#### Technical Implementation
 ```bash
-# Current files only (limited protection)
-ggshield secret scan path . --recursive
+# Activate environment
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
 
-# Complete history (comprehensive protection)
-ggshield secret scan repo .
-```
-
-### Pipeline Failure Handling
-
-The CI pipeline implements strict failure handling:
-
-- **Sequential Execution**: Each stage waits for previous stage completion
-- **Fast Failure**: Pipeline stops immediately when any stage fails
-- **No Partial Deployments**: Release only occurs if ALL quality gates pass
-- **Clear Feedback**: Detailed logs show exactly what failed and why
-
-### Quality Gate Integration
-
-#### SonarCloud Analysis (Main Branch)
-- **Code Quality Metrics**: Maintainability, reliability, security ratings
-- **Coverage Verification**: Validates 80% coverage requirement
-- **Technical Debt**: Identifies areas needing refactoring
-- **Security Hotspots**: Detects potential vulnerabilities
-
-#### Automated Release Gates
-- **Version Calculation**: Based on conventional commit analysis
-- **Changelog Generation**: Automatic release notes from commit history
-- **Artifact Publishing**: Only occurs after all quality gates pass
-
-## Test Coverage Enforcement
-
-This repository enforces **80% minimum test coverage** at multiple levels:
-
-### Pre-commit Hook
-- Automatically runs on every commit attempt
-- Uses `python -B -m pytest -c pytest-precommit.ini -p no:cacheprovider`
-- Blocks commits if coverage drops below 80%
-- Generates no cache files to avoid "files modified" errors
-
-### Configuration
-- **`.coveragerc`**: Main coverage configuration with `data_file = /tmp/.coverage_precommit`
-- **Branch coverage enabled**: Comprehensive testing of all code paths
-- **Exclusion patterns**: Common patterns like `pragma: no cover`, `__repr__`, etc.
-
-### Testing Commands
-```bash
-# Run tests with coverage manually
+# Run all tests with coverage
 python -m pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 
-# Test the pre-commit hook
-pre-commit run pytest --all-files
+# Run specific test file
+python -m pytest tests/test_acronym_creator.py -v
+
+# Run specific test
+python -m pytest tests/test_cli.py::test_basic_usage -v
+
+# Generate HTML coverage report
+python -m pytest --cov=src --cov-report=html
+open htmlcov/index.html
+
+# Run tests in watch mode (requires pytest-watch)
+pip install pytest-watch
+ptw
 ```
 
-## Semantic Versioning & Releases
+### Development Workflow
 
-Fully automated versioning based on [Conventional Commits](https://www.conventionalcommits.org/):
+```bash
+# 1. Set up environment (every terminal session)
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
+
+# 2. Create feature branch
+git checkout -b feat/new-feature
+
+# 3. Make changes and add tests (maintain 80% coverage)
+
+# 4. Run pre-commit checks
+pre-commit run --all-files
+
+# 5. Commit with conventional format
+git add .
+git commit -m "feat: add new acronym generation feature"
+
+# 6. If hooks auto-fix files, stage and amend
+git status  # Check for modified files
+git add .
+git commit --amend --no-edit
+
+# 7. Push to remote
+git push origin feat/new-feature
+
+# 8. Create pull request
+gh pr create --title "feat: add new feature" --body "Description"
+```
+
+### Pre-commit Hooks
+
+This project uses **both lefthook and pre-commit** hook managers:
+
+**Hooks run automatically on commit**:
+- ✅ Black code formatting (auto-fixes)
+- ✅ Flake8 linting
+- ✅ GitGuardian secret scanning
+- ✅ Test coverage (80% minimum)
+- ✅ Conventional commit format validation
+- ✅ Trailing whitespace removal (auto-fixes)
+- ✅ End-of-file fixes (auto-fixes)
+- ✅ YAML syntax validation
+
+**Manual hook execution**:
+```bash
+# Run all hooks
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run black --all-files
+pre-commit run pytest --all-files
+pre-commit run ggshield --all-files
+```
+
+### Adding New Features
+
+1. **Write tests first** (TDD approach):
+   ```bash
+   # Add test to tests/test_acronym_creator.py
+   def test_new_feature(self):
+       # Test implementation
+       pass
+   ```
+
+2. **Implement feature** in `src/acronymcreator/core.py` or `cli.py`
+
+3. **Ensure coverage ≥ 80%**:
+   ```bash
+   python -m pytest --cov=src --cov-report=term-missing
+   ```
+
+4. **Run all quality checks**:
+   ```bash
+   pre-commit run --all-files
+   ```
+
+5. **Commit with conventional format**:
+   ```bash
+   git commit -m "feat: add syllable-based acronym generation"
+   ```
+
+---
+
+## CI/CD Pipeline
+
+### Pipeline Stages
+
+The CI pipeline runs automatically on every push and pull request:
+
+#### 1. Lint and Test (≈1-2 minutes)
+- Re-runs all pre-commit hooks in clean environment
+- Validates hooks weren't bypassed with `--no-verify`
+- Runs comprehensive test suite with coverage
+- Generates coverage artifacts for downstream stages
+
+#### 2. GitGuardian Repository History Scan (≈1-3 minutes)
+- Scans **entire git history** with `ggshield secret scan repo .`
+- Catches secrets in deleted files or old commits
+- Prevents secrets from ever entering the repository
+
+#### 3. SonarCloud Quality Gate (≈2-3 minutes, main branch only)
+- Code quality analysis (maintainability rating)
+- Security vulnerability detection
+- Code coverage verification (≥80%)
+- Technical debt assessment
+- Blocks merge if quality gate fails
+
+#### 4. Semgrep Security Analysis (≈1-2 minutes)
+- Static analysis for security vulnerabilities
+- Runs in parallel with SonarCloud
+- Checks for common security anti-patterns
+
+#### 5. Build (≈30 seconds)
+- Validates package builds correctly
+- Generates distribution artifacts
+- Verifies all dependencies are declared
+
+#### 6. Release (≈1 minute, main branch only)
+- Analyzes conventional commits since last release
+- Calculates semantic version number
+- Generates changelog from commit history
+- Creates GitHub release with git tag
+
+### Semantic Versioning
+
+Automated version calculation based on [Conventional Commits](https://www.conventionalcommits.org/):
 
 | Commit Type | Version Bump | Example |
 |-------------|--------------|---------|
 | `feat:` | Minor | 1.0.0 → 1.1.0 |
 | `fix:` | Patch | 1.0.0 → 1.0.1 |
 | `feat!:` or `BREAKING CHANGE:` | Major | 1.0.0 → 2.0.0 |
-| `docs:`, `style:`, `refactor:`, `test:`, `chore:` | None | No release |
+| `docs:`, `style:`, `refactor:`, `test:`, `build:`, `ci:`, `chore:` | None | No release |
 
-**Release Process**:
-1. Push to `main` branch triggers semantic-release
-2. Analyzes commits since last release
-3. Calculates next version number
-4. Generates changelog
-5. Creates GitHub release with git tag
+**Example commits**:
+```bash
+git commit -m "feat: add syllable-based acronym generation"
+# → Version 0.1.0 to 0.2.0
 
-## CLI Usage
+git commit -m "fix: resolve case sensitivity issue in article filtering"
+# → Version 0.1.0 to 0.1.1
 
-The acronym generator CLI provides several options:
+git commit -m "feat!: change CLI argument structure
+
+BREAKING CHANGE: --include-articles now requires explicit boolean value"
+# → Version 0.1.0 to 1.0.0
+```
+
+### Monitoring CI Status
 
 ```bash
-# Basic usage
-acronymcreator "Hello World"                    # Output: HW
+# View recent CI runs
+gh run list --limit 5
 
-# Include articles and common words
-acronymcreator "The Quick Brown Fox" --include-articles  # Output: TQBF
+# View specific run details
+gh run view <run-id>
 
-# Lowercase output
-acronymcreator "Hello World" --lowercase         # Output: hw
+# View logs for failed run
+gh run view <run-id> --log
 
-# Get help
-acronymcreator --help
+# Re-run failed jobs
+gh run rerun <run-id>
 
-# Check version
-acronymcreator --version
+# Watch current run
+gh run watch
 ```
+
+---
+
+## Configuration
+
+### Key Configuration Files
+
+| File | Purpose | Critical Settings |
+|------|---------|------------------|
+| `lefthook.yml` | Primary git hooks (requires tools in PATH) | black, flake8, pytest, gitguardian |
+| `.pre-commit-config.yaml` | Alternative hooks with isolated environments | Same as lefthook but managed |
+| `.coveragerc` | Coverage configuration | `fail_under = 80`, `data_file = /tmp/...` |
+| `pytest-precommit.ini` | Pytest configuration for hooks | Coverage settings, test paths |
+| `pyproject.toml` | Python package configuration | Dependencies, entry points, pytest/coverage |
+| `.github/workflows/ci.yml` | CI/CD pipeline | 6-stage pipeline definition |
+| `sonar-project.properties` | SonarCloud configuration | Quality gate, coverage paths |
+| `.releaserc.json` | Semantic-release configuration | Versioning rules, changelog format |
+
+### Environment Variables
+
+**Local Development**:
+```bash
+export GITGUARDIAN_API_KEY=your_api_key_here  # Required for ggshield
+export PATH="$(pwd)/venv/bin:$PATH"           # Required for lefthook
+```
+
+**CI/CD (GitHub Secrets)**:
+- `GITGUARDIAN_API_KEY`: GitGuardian API key for secret scanning
+- `SONAR_TOKEN`: SonarCloud integration token
+- `SEMGREP_APP_TOKEN`: Semgrep security analysis token
+- `GITHUB_TOKEN`: Automatically provided by GitHub Actions
+
+### Coverage Configuration
+
+Coverage enforced at **three levels**:
+
+1. **Pre-commit hook**: Blocks commits <80% coverage
+2. **CI pipeline**: Re-validates in clean environment
+3. **SonarCloud**: Quality gate requires ≥80%
+
+**Configuration files**:
+- `.coveragerc`: Main config with `data_file = /tmp/.coverage_precommit`
+- Branch coverage enabled for comprehensive testing
+- Exclusion patterns for common non-testable code
+
+---
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Coverage Below 80%**:
+#### "flake8: not found" or "black: not found"
+
+**Cause**: Lefthook can't find tools because venv is not in PATH
+
+**Solution**:
 ```bash
-# Add tests for uncovered code paths
-# Check coverage report for missing lines
-python -m pytest --cov=src --cov-report=html
-open htmlcov/index.html
+source venv/bin/activate
+export PATH="$(pwd)/venv/bin:$PATH"
+git commit ...
 ```
 
-**Pre-commit Hook Failures**:
+#### Pre-commit Hooks Fail After Clean Install
+
+**Cause**: Pre-commit environments not installed
+
+**Solution**:
 ```bash
-# Re-run hooks after fixing issues
+pre-commit install --install-hooks
+pre-commit run --all-files
+```
+
+#### Coverage Below 80%
+
+**Solution**:
+```bash
+# Generate detailed coverage report
+python -m pytest --cov=src --cov-report=term-missing
+
+# Identify missing lines and add tests
+# Coverage must be ≥80% to commit
+```
+
+#### GitGuardian API Key Not Set
+
+**Cause**: `GITGUARDIAN_API_KEY` environment variable not set
+
+**Solution**:
+```bash
+# Get API key from GitGuardian dashboard
+export GITGUARDIAN_API_KEY=your_api_key_here
+
+# Persist in shell profile
+echo 'export GITGUARDIAN_API_KEY=your_api_key_here' >> ~/.bashrc
+source ~/.bashrc
+```
+
+#### SonarCloud Quality Gate Fails
+
+**Check CI Logs**: Look for "Check Quality Gate Status" step
+
+**Common failures**:
+```bash
+# Coverage below 80%
+# → Add more tests
+
+# Security hotspots not reviewed
+# → Review in SonarCloud UI (cannot be auto-fixed)
+
+# Code smells
+# → Refactor per SonarCloud recommendations
+
+# Duplicated code >3%
+# → Extract common code into functions
+```
+
+#### Commit Message Rejected
+
+**Cause**: Commit doesn't follow conventional format
+
+**Solution**:
+```bash
+# Valid formats
+git commit -m "feat: add new feature"
+git commit -m "fix: resolve bug"
+git commit -m "docs: update README"
+
+# Invalid
+git commit -m "Added new feature"  # ❌ Wrong tense
+git commit -m "feature: add thing"  # ❌ Wrong type
+```
+
+### Getting Help
+
+```bash
+# CLI help
+acronymcreator --help
+
+# View configuration
+cat pyproject.toml
+cat .coveragerc
+cat lefthook.yml
+
+# Check hook status
 pre-commit run --all-files
 
-# Update hook dependencies
-pre-commit autoupdate
+# Verify environment
+which python
+which black
+which flake8
+python --version
 ```
 
-**GitGuardian API Issues**:
-```bash
-# Test GitGuardian scanning specifically
-ggshield secret scan pre-commit
-
-# Check API key is set
-echo $GITGUARDIAN_API_KEY
-```
-
-### Pipeline Debugging
-
-**SonarCloud Quality Gate Failures**:
-- Check the "Check Quality Gate Status" step in CI logs
-- Review detailed metrics for failed conditions
-- Fix issues systematically and re-run analysis
-
-**Semantic Release Issues**:
-- Ensure commit messages follow conventional format
-- Check repository URL matches in `.releaserc.json`
-- Verify GitHub token permissions for releases
+---
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/new-feature`
-3. Make changes with proper test coverage (≥80%)
-4. Commit using conventional format: `git commit -m "feat: add new feature"`
-5. Push and create a pull request
-6. All quality gates must pass before merge
+We welcome contributions! Please follow these guidelines:
+
+### Contribution Workflow
+
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feat/amazing-feature`
+3. **Make changes with tests** (maintain ≥80% coverage)
+4. **Run quality checks**: `pre-commit run --all-files`
+5. **Commit with conventional format**: `git commit -m "feat: add amazing feature"`
+6. **Push to fork**: `git push origin feat/amazing-feature`
+7. **Create Pull Request**
+
+### Requirements for PR Acceptance
+
+- ✅ All CI pipeline stages pass
+- ✅ Test coverage ≥ 80%
+- ✅ No GitGuardian secrets detected
+- ✅ SonarCloud quality gate passes
+- ✅ Conventional commit format
+- ✅ Code formatted with Black
+- ✅ No Flake8 violations
+
+### Code Style
+
+This project uses:
+- **Black** for code formatting (automatic)
+- **Flake8** for linting
+- **Pytest** for testing
+- **Type hints** encouraged but not required
+
+### Testing Guidelines
+
+```python
+# Write descriptive test names
+def test_create_acronym_excludes_articles_by_default(self):
+    """Test that articles are excluded unless explicitly included."""
+    pass
+
+# Aim for comprehensive coverage
+def test_edge_case_empty_phrase(self):
+    """Test handling of empty input."""
+    pass
+
+# Use fixtures for common setup
+@pytest.fixture
+def acronym_creator():
+    return AcronymCreator()
+```
+
+---
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+Built with:
+- [Click](https://click.palletsprojects.com/) - Command line interface framework
+- [GitGuardian](https://www.gitguardian.com/) - Secret detection
+- [SonarCloud](https://sonarcloud.io/) - Code quality analysis
+- [Semantic Release](https://semantic-release.gitbook.io/) - Automated versioning
+- [Pre-commit](https://pre-commit.com/) - Git hook management
+- [Lefthook](https://github.com/evilmartians/lefthook) - Fast git hooks
+
+---
+
+## Related Resources
+
+- [CLAUDE.md](CLAUDE.md) - Detailed development guide for Claude Code
+- [BLOG.md](BLOG.md) - Blog post about "Automated Guard Rails for Vibe Coding"
+- [Conventional Commits](https://www.conventionalcommits.org/) - Commit message specification
+- [GitGuardian Documentation](https://docs.gitguardian.com/) - Secret scanning setup
+- [SonarCloud Documentation](https://docs.sonarcloud.io/) - Quality gate configuration
