@@ -44,15 +44,15 @@ jobs:
         echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
         echo "Found PR #$PR_NUMBER on branch $PR_BRANCH"
 
-    - name: Skip if last commit is the trigger-only commit
+    - name: Skip if last commit was already amended by auto-fix
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         RUN_ID="${{ github.event.workflow_run.id }}"
         HEAD_SHA=$(gh api /repos/${{ github.repository }}/actions/runs/$RUN_ID --jq .head_sha)
         MSG=$(gh api /repos/${{ github.repository }}/commits/$HEAD_SHA --jq .commit.message)
-        if echo "$MSG" | grep -qi '^ci: trigger workflow after auto-fix'; then
-          echo "Latest commit is the CI trigger-only commit; skipping auto-fix to avoid loops."
+        if echo "$MSG" | grep -q '\[ci-trigger\]'; then
+          echo "Latest commit was already amended by auto-fix; skipping to avoid loops."
           exit 0
         fi
 
@@ -121,19 +121,31 @@ jobs:
              - Conventional commit: "fix: <brief>"
              - Co-Authored-By: Claude <noreply@anthropic.com>
              - Push to ${{ steps.get-pr.outputs.pr_branch }}
+             - After pushing, amend the commit message to include trigger text
+             - Force push to update the remote
 
           CRITICAL RULES:
           - Steps must be executed in order
           - Do NOT skip validation (step 3)
           - Do NOT commit if pre-commit hooks fail
-          - Do NOT manually trigger workflows - the workflow handles it
+          - After committing and pushing, you MUST amend the commit to add "[ci-trigger]" to the message and force push
 
-    - name: Trigger CI re-run with empty commit
+    - name: Amend commit to trigger CI
       if: success()
       run: |
-        # Claude commits as claude[bot] which doesn't trigger pull_request events
-        # We need to make an additional commit to trigger CI
+        # Fetch the latest commit from remote
+        git fetch origin ${{ steps.get-pr.outputs.pr_branch }}
+        git reset --hard origin/${{ steps.get-pr.outputs.pr_branch }}
+
+        # Get the current commit message and amend it
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git commit --allow-empty -m "ci: trigger workflow after auto-fix"
-        git push
+
+        # Amend with heredoc to preserve formatting
+        git commit --amend -m "$(cat <<'EOF'
+        $(git log -1 --pretty=%B)
+
+        [ci-trigger] Amended to trigger workflow after auto-fix
+        EOF
+        )"
+        git push --force
