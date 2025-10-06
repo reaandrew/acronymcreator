@@ -1,3 +1,9 @@
+## [1.9.0](https://github.com/reaandrew/acronymcreator/compare/v1.8.1...v1.9.0) (2025-10-06)
+
+### Features
+
+* add YAML export format ([#8](https://github.com/reaandrew/acronymcreator/issues/8)) ([35ef9fb](https://github.com/reaandrew/acronymcreator/commit/35ef9fb4734208131f2033313bbc44271d9b483c))
+
 ## [1.8.1](https://github.com/reaandrew/acronymcreator/compare/v1.8.0...v1.8.1) (2025-10-06)
 
 ### Bug Fixes
