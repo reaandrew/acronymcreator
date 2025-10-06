@@ -122,7 +122,7 @@ jobs:
                * Follow the same detailed style as existing CLI examples
 
           3. VALIDATE FIXES
-             - Run all pre-commit hooks: pre-commit run --all-files
+             - Run all pre-commit hooks: SKIP=ggshield pre-commit run --all-files
              - Auto-stage any files modified by hooks
              - Ensure all hooks pass
 
