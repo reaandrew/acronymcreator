@@ -71,6 +71,5 @@ jobs:
             If details are ambiguous, proceed safely (feature flag/stub/tests/docs) and open a **draft** PR with a checklist.
 
           claude_args: |
-            --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,Bash(*)"
-            --dangerously-skip-permissions
+            --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,Bash(git:*),Bash(gh:*),Bash(python:*),Bash(python3:*),Bash(pytest:*),Bash(pre-commit:*),Bash(which:*),Bash(ls:*)"
             --max-turns 50
