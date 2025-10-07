@@ -334,6 +334,70 @@ Quick Brown Fox,QBF,false,2,,false
 - Header row included for easy data import
 - Empty cells for optional fields (like `max_words` when not specified)
 
+### TOML Output Format
+
+**Feature**: Use `--format toml` to get human-readable configuration format output, ideal for modern Python projects and configuration management
+
+```bash
+# Default text format
+$ acronymcreator "Hello World"
+HW
+
+# TOML format
+$ acronymcreator "Hello World" --format toml
+phrase = "Hello World"
+acronym = "HW"
+include_articles = false
+min_word_length = 2
+max_words = ""
+lowercase = false
+
+# TOML with include-articles option
+$ acronymcreator "The Quick Brown Fox" --include-articles --format toml
+phrase = "The Quick Brown Fox"
+acronym = "TQBF"
+include_articles = true
+min_word_length = 2
+max_words = ""
+lowercase = false
+
+# TOML with lowercase option
+$ acronymcreator "Hello World" --lowercase --format toml
+phrase = "Hello World"
+acronym = "hw"
+include_articles = false
+min_word_length = 2
+max_words = ""
+lowercase = true
+
+# TOML with all options
+$ acronymcreator "The Quick Brown Fox Jumps" --include-articles --lowercase --min-length 3 --max-words 3 --format toml
+phrase = "The Quick Brown Fox Jumps"
+acronym = "tqb"
+include_articles = true
+min_word_length = 3
+max_words = 3
+lowercase = true
+
+# Real-world use case: Generate configuration files
+$ acronymcreator "Database Management System" --format toml > dbms-config.toml
+$ cat dbms-config.toml
+phrase = "Database Management System"
+acronym = "DMS"
+include_articles = false
+min_word_length = 2
+max_words = ""
+lowercase = false
+```
+
+**TOML Features**:
+- Human-readable configuration format
+- Strong typing (booleans as `true`/`false`, integers as numbers)
+- Compatible with Python projects (`pyproject.toml`, `poetry`, etc.)
+- Proper escaping of special characters
+- Flat key-value structure for simple acronym data
+- Native support in Python 3.11+ (`tomllib`) for reading
+
 ### Combining Multiple Options
 
 **Feature**: All options can be combined for precise control over acronym generation
