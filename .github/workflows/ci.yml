@@ -48,6 +48,7 @@ jobs:
     - name: Run lint and security checks
       env:
         GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        LEFTHOOK_EXCLUDE: ${{ secrets.GITGUARDIAN_API_KEY == '' && 'gitguardian' || '' }}
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin
         lefthook run pre-commit --all-files
@@ -68,6 +69,7 @@ jobs:
     name: GitGuardian Repository History Scan
     runs-on: ubuntu-latest
     needs: lint-and-test
+    if: vars.GITGUARDIAN_API_KEY != '' || secrets.GITGUARDIAN_API_KEY != ''
 
     steps:
     - uses: actions/checkout@v5
