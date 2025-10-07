@@ -33,7 +33,9 @@ from .core import AcronymCreator, AcronymOptions
 )
 @click.option(
     "--format",
-    type=click.Choice(["text", "json", "yaml", "csv", "tsv", "toml"], case_sensitive=False),
+    type=click.Choice(
+        ["text", "json", "yaml", "csv", "tsv", "toml"], case_sensitive=False
+    ),
     default="text",
     help="Output format (default: text)",
 )

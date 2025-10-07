@@ -357,9 +357,7 @@ class TestCLI:
 
     def test_cli_tsv_output_with_tabs_in_phrase(self):
         """Test TSV output properly handles phrases with tab characters."""
-        result = self.runner.invoke(
-            main, ["Hello\tWorld", "--format", "tsv"]
-        )
+        result = self.runner.invoke(main, ["Hello\tWorld", "--format", "tsv"])
         assert result.exit_code == 0
 
         # Parse TSV output - CSV library should properly escape tabs
