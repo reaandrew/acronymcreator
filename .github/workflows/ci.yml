@@ -132,7 +132,7 @@ jobs:
           -Dsonar.python.coverage.reportPaths=coverage.xml
 
     - name: Check Quality Gate Status
-      if: always()
+      if: success()
       timeout-minutes: 5
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
