@@ -226,6 +226,148 @@ class TestCLI:
         for column in expected_columns:
             assert column in header
 
+    def test_cli_tsv_output_basic(self):
+        """Test CLI with TSV output format."""
+        result = self.runner.invoke(main, ["Hello World", "--format", "tsv"])
+        assert result.exit_code == 0
+
+        # Parse TSV output
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["phrase"] == "Hello World"
+        assert rows[0]["acronym"] == "HW"
+        assert rows[0]["include_articles"] == "false"
+        assert rows[0]["min_word_length"] == "2"
+        assert rows[0]["max_words"] == ""
+        assert rows[0]["lowercase"] == "false"
+
+    def test_cli_tsv_output_with_articles(self):
+        """Test CLI with TSV output and include-articles option."""
+        result = self.runner.invoke(
+            main, ["The Quick Brown Fox", "--format", "tsv", "--include-articles"]
+        )
+        assert result.exit_code == 0
+
+        # Parse TSV output
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["phrase"] == "The Quick Brown Fox"
+        assert rows[0]["acronym"] == "TQBF"
+        assert rows[0]["include_articles"] == "true"
+        assert rows[0]["min_word_length"] == "2"
+        assert rows[0]["lowercase"] == "false"
+
+    def test_cli_tsv_output_lowercase(self):
+        """Test CLI with TSV output and lowercase option."""
+        result = self.runner.invoke(
+            main, ["Hello World", "--format", "tsv", "--lowercase"]
+        )
+        assert result.exit_code == 0
+
+        # Parse TSV output
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["acronym"] == "hw"
+        assert rows[0]["lowercase"] == "true"
+
+    def test_cli_tsv_output_all_options(self):
+        """Test CLI with TSV output and all options."""
+        result = self.runner.invoke(
+            main,
+            [
+                "The Quick Brown Fox Jumps",
+                "--format",
+                "tsv",
+                "--include-articles",
+                "--lowercase",
+                "--min-length",
+                "3",
+                "--max-words",
+                "3",
+            ],
+        )
+        assert result.exit_code == 0
+
+        # Parse TSV output
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["phrase"] == "The Quick Brown Fox Jumps"
+        assert rows[0]["include_articles"] == "true"
+        assert rows[0]["min_word_length"] == "3"
+        assert rows[0]["max_words"] == "3"
+        assert rows[0]["lowercase"] == "true"
+
+    def test_cli_tsv_output_special_characters(self):
+        """Test CLI with TSV output handling special characters."""
+        result = self.runner.invoke(main, ['Hello, World! "Test"', "--format", "tsv"])
+        assert result.exit_code == 0
+
+        # Parse TSV output - CSV library should handle special characters
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["acronym"] == "HWT"
+
+    def test_cli_tsv_output_header_structure(self):
+        """Test TSV header structure matches expected columns."""
+        result = self.runner.invoke(main, ["Test Phrase", "--format", "tsv"])
+        assert result.exit_code == 0
+
+        lines = result.output.strip().split("\n")
+        header = lines[0]
+
+        # Check that header contains all expected columns with tab separators
+        expected_columns = [
+            "phrase",
+            "acronym",
+            "include_articles",
+            "min_word_length",
+            "max_words",
+            "lowercase",
+        ]
+        for column in expected_columns:
+            assert column in header
+
+        # Verify tab delimiter is used
+        assert "\t" in header
+
+    def test_cli_tsv_output_with_commas(self):
+        """Test TSV output properly handles phrases with commas."""
+        result = self.runner.invoke(
+            main, ["Hello, Wonderful, Amazing World", "--format", "tsv"]
+        )
+        assert result.exit_code == 0
+
+        # Parse TSV output
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        # Verify the entire phrase is preserved with commas
+        assert rows[0]["phrase"] == "Hello, Wonderful, Amazing World"
+
+    def test_cli_tsv_output_with_tabs_in_phrase(self):
+        """Test TSV output properly handles phrases with tab characters."""
+        result = self.runner.invoke(main, ["Hello\tWorld", "--format", "tsv"])
+        assert result.exit_code == 0
+
+        # Parse TSV output - CSV library should properly escape tabs
+        tsv_reader = csv.DictReader(io.StringIO(result.output), delimiter="\t")
+        rows = list(tsv_reader)
+
+        assert len(rows) == 1
+        # Verify the entire phrase is preserved with tab
+        assert "Hello" in rows[0]["phrase"] and "World" in rows[0]["phrase"]
+
     def test_cli_toml_output_basic(self):
         """Test CLI with TOML output format."""
         result = self.runner.invoke(main, ["Hello World", "--format", "toml"])
