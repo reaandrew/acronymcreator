@@ -64,6 +64,29 @@ jobs:
           coverage.xml
           htmlcov/
 
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install project dependencies
+      run: pip install -e ".[dev]"
+
+    - name: Install pip-audit
+      run: pip install pip-audit
+
+    - name: Scan dependencies for vulnerabilities
+      run: |
+        # Scan all installed dependencies for known CVEs
+        pip-audit --desc
+      continue-on-error: false
+
   gitguardian-scan:
     name: GitGuardian Repository History Scan
     runs-on: ubuntu-latest
