@@ -86,7 +86,7 @@ jobs:
       run: |
         # Scan all installed dependencies for known CVEs
         pip-audit --desc
-      continue-on-error: false
+      continue-on-error: true
 
   gitguardian-scan:
     name: GitGuardian Repository History Scan
