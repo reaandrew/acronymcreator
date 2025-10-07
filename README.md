@@ -334,6 +334,68 @@ Quick Brown Fox,QBF,false,2,,false
 - Header row included for easy data import
 - Empty cells for optional fields (like `max_words` when not specified)
 
+### TSV Output Format
+
+**Feature**: Use `--format tsv` to get tab-separated values output, ideal for data analysis tools and database imports
+
+```bash
+# Default text format
+$ acronymcreator "Hello World"
+HW
+
+# TSV format with header and data row
+$ acronymcreator "Hello World" --format tsv
+phrase	acronym	include_articles	min_word_length	max_words	lowercase
+Hello World	HW	false	2		false
+
+# TSV with include-articles option
+$ acronymcreator "The Quick Brown Fox" --include-articles --format tsv
+phrase	acronym	include_articles	min_word_length	max_words	lowercase
+The Quick Brown Fox	TQBF	true	2		false
+
+# TSV with lowercase option
+$ acronymcreator "The Quick Brown Fox" --include-articles --lowercase --format tsv
+phrase	acronym	include_articles	min_word_length	max_words	lowercase
+The Quick Brown Fox	tqbf	true	2		true
+
+# TSV with all options
+$ acronymcreator "The Quick Brown Fox Jumps" --include-articles --lowercase --min-length 3 --max-words 3 --format tsv
+phrase	acronym	include_articles	min_word_length	max_words	lowercase
+The Quick Brown Fox Jumps	tqb	true	3	3	true
+
+# Real-world use case: Export to file for data analysis
+$ acronymcreator "Database Management System" --format tsv > acronyms.tsv
+$ cat acronyms.tsv
+phrase	acronym	include_articles	min_word_length	max_words	lowercase
+Database Management System	DMS	false	2		false
+
+# Batch processing multiple phrases into TSV
+$ echo -e "phrase\tacronym\tinclude_articles\tmin_word_length\tmax_words\tlowercase" > batch_acronyms.tsv
+$ for phrase in "Hello World" "Foo Bar Baz" "Quick Brown Fox"; do
+    acronymcreator "$phrase" --format tsv | tail -n 1 >> batch_acronyms.tsv
+  done
+$ cat batch_acronyms.tsv
+phrase	acronym	include_articles	min_word_length	max_words	lowercase
+Hello World	HW	false	2		false
+Foo Bar Baz	FBB	false	2		false
+Quick Brown Fox	QBF	false	2		false
+
+# Import into pandas (Python)
+$ python3 -c "import pandas as pd; df = pd.read_csv('acronyms.tsv', sep='\t'); print(df)"
+                        phrase acronym  include_articles  min_word_length max_words  lowercase
+0  Database Management System     DMS             false                2       NaN      false
+```
+
+**TSV Features**:
+- Tab-separated values format for data interchange
+- Proper escaping of special characters including tabs and quotes
+- Compatible with databases, data warehousing tools, and SQL imports
+- Works seamlessly with pandas, R, Excel, and other data analysis tools
+- Handles data containing commas better than CSV format
+- Header row included for easy data import
+- Empty cells for optional fields (like `max_words` when not specified)
+- Ideal for batch processing and data pipelines
+
 ### TOML Output Format
 
 **Feature**: Use `--format toml` to get human-readable configuration format output, ideal for modern Python projects and configuration management
