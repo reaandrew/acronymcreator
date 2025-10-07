@@ -57,7 +57,7 @@ jobs:
         fi
 
     - name: Checkout PR branch
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         ref: ${{ steps.get-pr.outputs.pr_branch }}
         fetch-depth: 0

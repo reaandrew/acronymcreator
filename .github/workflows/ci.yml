@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
@@ -70,7 +70,7 @@ jobs:
     needs: lint-and-test
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
@@ -88,7 +88,7 @@ jobs:
     needs: [lint-and-test, gitguardian-scan]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
@@ -175,7 +175,7 @@ jobs:
       image: semgrep/semgrep:1.95.0
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Run Semgrep analysis
       run: semgrep ci
 
@@ -185,7 +185,7 @@ jobs:
     if: always() && !cancelled() && !contains(needs.*.result, 'failure')
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Run basic checks
       run: |
@@ -205,7 +205,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
