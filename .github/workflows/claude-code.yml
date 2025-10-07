@@ -72,4 +72,5 @@ jobs:
 
           claude_args: |
             --allowedTools "Read,Glob,Grep,Edit,Write,MultiEdit,Bash(*)"
+            --dangerously-skip-permissions
             --max-turns 50
