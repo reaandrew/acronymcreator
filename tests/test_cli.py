@@ -2,6 +2,8 @@
 Tests for the CLI module.
 """
 
+import csv
+import io
 import json
 from click.testing import CliRunner
 from src.acronymcreator.cli import main
@@ -111,3 +113,116 @@ class TestCLI:
         assert "acronym: tqbf" in result.output
         assert "include_articles: true" in result.output
         assert "lowercase: true" in result.output
+
+    def test_cli_csv_output_basic(self):
+        """Test CLI with CSV output format."""
+        result = self.runner.invoke(main, ["Hello World", "--format", "csv"])
+        assert result.exit_code == 0
+
+        # Parse CSV output
+        csv_reader = csv.DictReader(io.StringIO(result.output))
+        rows = list(csv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["phrase"] == "Hello World"
+        assert rows[0]["acronym"] == "HW"
+        assert rows[0]["include_articles"] == "false"
+        assert rows[0]["min_word_length"] == "2"
+        assert rows[0]["max_words"] == ""
+        assert rows[0]["lowercase"] == "false"
+
+    def test_cli_csv_output_with_articles(self):
+        """Test CLI with CSV output and include-articles option."""
+        result = self.runner.invoke(
+            main, ["The Quick Brown Fox", "--format", "csv", "--include-articles"]
+        )
+        assert result.exit_code == 0
+
+        # Parse CSV output
+        csv_reader = csv.DictReader(io.StringIO(result.output))
+        rows = list(csv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["phrase"] == "The Quick Brown Fox"
+        assert rows[0]["acronym"] == "TQBF"
+        assert rows[0]["include_articles"] == "true"
+        assert rows[0]["min_word_length"] == "2"
+        assert rows[0]["lowercase"] == "false"
+
+    def test_cli_csv_output_lowercase(self):
+        """Test CLI with CSV output and lowercase option."""
+        result = self.runner.invoke(
+            main, ["Hello World", "--format", "csv", "--lowercase"]
+        )
+        assert result.exit_code == 0
+
+        # Parse CSV output
+        csv_reader = csv.DictReader(io.StringIO(result.output))
+        rows = list(csv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["acronym"] == "hw"
+        assert rows[0]["lowercase"] == "true"
+
+    def test_cli_csv_output_all_options(self):
+        """Test CLI with CSV output and all options."""
+        result = self.runner.invoke(
+            main,
+            [
+                "The Quick Brown Fox Jumps",
+                "--format",
+                "csv",
+                "--include-articles",
+                "--lowercase",
+                "--min-length",
+                "3",
+                "--max-words",
+                "3",
+            ],
+        )
+        assert result.exit_code == 0
+
+        # Parse CSV output
+        csv_reader = csv.DictReader(io.StringIO(result.output))
+        rows = list(csv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["phrase"] == "The Quick Brown Fox Jumps"
+        assert rows[0]["include_articles"] == "true"
+        assert rows[0]["min_word_length"] == "3"
+        assert rows[0]["max_words"] == "3"
+        assert rows[0]["lowercase"] == "true"
+
+    def test_cli_csv_output_special_characters(self):
+        """Test CLI with CSV output handling special characters."""
+        result = self.runner.invoke(
+            main, ['Hello, World! "Test"', "--format", "csv"]
+        )
+        assert result.exit_code == 0
+
+        # Parse CSV output - CSV library should handle special characters
+        csv_reader = csv.DictReader(io.StringIO(result.output))
+        rows = list(csv_reader)
+
+        assert len(rows) == 1
+        assert rows[0]["acronym"] == "HWT"
+
+    def test_cli_csv_output_header_structure(self):
+        """Test CSV header structure matches expected columns."""
+        result = self.runner.invoke(main, ["Test Phrase", "--format", "csv"])
+        assert result.exit_code == 0
+
+        lines = result.output.strip().split("\n")
+        header = lines[0]
+
+        # Check that header contains all expected columns
+        expected_columns = [
+            "phrase",
+            "acronym",
+            "include_articles",
+            "min_word_length",
+            "max_words",
+            "lowercase",
+        ]
+        for column in expected_columns:
+            assert column in header

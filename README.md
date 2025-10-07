@@ -280,6 +280,60 @@ options:
 phrase: Database Management System
 ```
 
+### CSV Output Format
+
+**Feature**: Use `--format csv` to get structured tabular output, perfect for spreadsheets and data analysis tools
+
+```bash
+# Default text format
+$ acronymcreator "Hello World"
+HW
+
+# CSV format with header and data row
+$ acronymcreator "Hello World" --format csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+Hello World,HW,false,2,,false
+
+# CSV with include-articles option
+$ acronymcreator "The Quick Brown Fox" --include-articles --format csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+The Quick Brown Fox,TQBF,true,2,,false
+
+# CSV with lowercase option
+$ acronymcreator "The Quick Brown Fox" --include-articles --lowercase --format csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+The Quick Brown Fox,tqbf,true,2,,true
+
+# CSV with all options
+$ acronymcreator "The Quick Brown Fox Jumps" --include-articles --lowercase --min-length 3 --max-words 3 --format csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+"The Quick Brown Fox Jumps",tqb,true,3,3,true
+
+# Real-world use case: Export to file for spreadsheet analysis
+$ acronymcreator "Database Management System" --format csv > acronyms.csv
+$ cat acronyms.csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+Database Management System,DMS,false,2,,false
+
+# Batch processing multiple phrases into CSV
+$ echo "phrase,acronym,include_articles,min_word_length,max_words,lowercase" > batch_acronyms.csv
+$ for phrase in "Hello World" "Foo Bar Baz" "Quick Brown Fox"; do
+    acronymcreator "$phrase" --format csv | tail -n 1 >> batch_acronyms.csv
+  done
+$ cat batch_acronyms.csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+Hello World,HW,false,2,,false
+Foo Bar Baz,FBB,false,2,,false
+Quick Brown Fox,QBF,false,2,,false
+```
+
+**CSV Features**:
+- Standard RFC 4180 compliant CSV format
+- Proper quoting and escaping of special characters
+- Compatible with Excel, Google Sheets, pandas, R, and other data tools
+- Header row included for easy data import
+- Empty cells for optional fields (like `max_words` when not specified)
+
 ### Combining Multiple Options
 
 **Feature**: All options can be combined for precise control over acronym generation
@@ -305,6 +359,11 @@ $ acronymcreator "International Business Machines" --max-words 3 --lowercase --f
     "lowercase": true
   }
 }
+
+# CSV output with custom filtering
+$ acronymcreator "International Business Machines" --max-words 3 --lowercase --format csv
+phrase,acronym,include_articles,min_word_length,max_words,lowercase
+International Business Machines,ibm,false,2,3,true
 ```
 
 ### Real-World Examples
