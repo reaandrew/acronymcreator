@@ -195,9 +195,7 @@ class TestCLI:
 
     def test_cli_csv_output_special_characters(self):
         """Test CLI with CSV output handling special characters."""
-        result = self.runner.invoke(
-            main, ['Hello, World! "Test"', "--format", "csv"]
-        )
+        result = self.runner.invoke(main, ['Hello, World! "Test"', "--format", "csv"])
         assert result.exit_code == 0
 
         # Parse CSV output - CSV library should handle special characters
