@@ -6,6 +6,7 @@ import csv
 import io
 import json
 import yaml
+import tomli_w
 import click
 from .core import AcronymCreator, AcronymOptions
 
@@ -32,7 +33,7 @@ from .core import AcronymCreator, AcronymOptions
 )
 @click.option(
     "--format",
-    type=click.Choice(["text", "json", "yaml", "csv"], case_sensitive=False),
+    type=click.Choice(["text", "json", "yaml", "csv", "toml"], case_sensitive=False),
     default="text",
     help="Output format (default: text)",
 )
@@ -114,6 +115,16 @@ def main(phrase, include_articles, min_length, max_words, lowercase, format):
             ]
         )
         click.echo(output_buffer.getvalue().rstrip())
+    elif format == "toml":
+        output = {
+            "phrase": phrase,
+            "acronym": result,
+            "include_articles": include_articles,
+            "min_word_length": min_length,
+            "max_words": max_words if max_words is not None else "",
+            "lowercase": lowercase,
+        }
+        click.echo(tomli_w.dumps(output).rstrip())
     else:
         click.echo(result)
 

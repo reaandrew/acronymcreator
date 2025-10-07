@@ -5,6 +5,7 @@ Tests for the CLI module.
 import csv
 import io
 import json
+import tomllib
 from click.testing import CliRunner
 from src.acronymcreator.cli import main
 
@@ -224,3 +225,113 @@ class TestCLI:
         ]
         for column in expected_columns:
             assert column in header
+
+    def test_cli_toml_output_basic(self):
+        """Test CLI with TOML output format."""
+        result = self.runner.invoke(main, ["Hello World", "--format", "toml"])
+        assert result.exit_code == 0
+
+        # Parse TOML output
+        output = tomllib.loads(result.output)
+
+        assert output["phrase"] == "Hello World"
+        assert output["acronym"] == "HW"
+        assert output["include_articles"] is False
+        assert output["min_word_length"] == 2
+        assert output["max_words"] == ""
+        assert output["lowercase"] is False
+
+    def test_cli_toml_output_with_articles(self):
+        """Test CLI with TOML output and include-articles option."""
+        result = self.runner.invoke(
+            main, ["The Quick Brown Fox", "--format", "toml", "--include-articles"]
+        )
+        assert result.exit_code == 0
+
+        # Parse TOML output
+        output = tomllib.loads(result.output)
+
+        assert output["phrase"] == "The Quick Brown Fox"
+        assert output["acronym"] == "TQBF"
+        assert output["include_articles"] is True
+        assert output["min_word_length"] == 2
+        assert output["lowercase"] is False
+
+    def test_cli_toml_output_lowercase(self):
+        """Test CLI with TOML output and lowercase option."""
+        result = self.runner.invoke(
+            main, ["Hello World", "--format", "toml", "--lowercase"]
+        )
+        assert result.exit_code == 0
+
+        # Parse TOML output
+        output = tomllib.loads(result.output)
+
+        assert output["acronym"] == "hw"
+        assert output["lowercase"] is True
+
+    def test_cli_toml_output_all_options(self):
+        """Test CLI with TOML output and all options."""
+        result = self.runner.invoke(
+            main,
+            [
+                "The Quick Brown Fox Jumps",
+                "--format",
+                "toml",
+                "--include-articles",
+                "--lowercase",
+                "--min-length",
+                "3",
+                "--max-words",
+                "3",
+            ],
+        )
+        assert result.exit_code == 0
+
+        # Parse TOML output
+        output = tomllib.loads(result.output)
+
+        assert output["phrase"] == "The Quick Brown Fox Jumps"
+        assert output["include_articles"] is True
+        assert output["min_word_length"] == 3
+        assert output["max_words"] == 3
+        assert output["lowercase"] is True
+
+    def test_cli_toml_output_types(self):
+        """Test CLI with TOML output validates correct types."""
+        result = self.runner.invoke(
+            main,
+            [
+                "Test Phrase",
+                "--format",
+                "toml",
+                "--include-articles",
+                "--min-length",
+                "5",
+                "--max-words",
+                "10",
+            ],
+        )
+        assert result.exit_code == 0
+
+        # Parse TOML output
+        output = tomllib.loads(result.output)
+
+        # Verify types
+        assert isinstance(output["phrase"], str)
+        assert isinstance(output["acronym"], str)
+        assert isinstance(output["include_articles"], bool)
+        assert isinstance(output["min_word_length"], int)
+        assert isinstance(output["max_words"], int)
+        assert isinstance(output["lowercase"], bool)
+
+    def test_cli_toml_output_special_characters(self):
+        """Test CLI with TOML output handling special characters."""
+        result = self.runner.invoke(main, ['Hello, World! "Test"', "--format", "toml"])
+        assert result.exit_code == 0
+
+        # Parse TOML output - should handle special characters correctly
+        output = tomllib.loads(result.output)
+
+        assert output["phrase"] == 'Hello, World! "Test"'
+        assert output["acronym"] == "HWT"
